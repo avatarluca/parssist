@@ -1,7 +1,5 @@
 package parssist.lexer;
 
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +63,7 @@ public class Lexer {
             if(token == null) throw new InvalidTokenException(CONFIG.getProperty("LEXER.ERROR.CURSOR") + cursor);
 
             tokens.add(token);
-            cursor += token.value().length();
+            cursor += token.symbol().length();
         }
 
         return tokens;
