@@ -1,10 +1,17 @@
 package parssist.parser.top_down_analysis.nrdparser;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
+
+import org.checkerframework.checker.units.qual.s;
 
 import parssist.ParssistConfig;
 import parssist.lexer.util.Token;
@@ -12,6 +19,7 @@ import parssist.lexer.util.TokenType;
 import parssist.parser.Parser;
 import parssist.parser.top_down_analysis.nrdparser.exception.NonRecursivePredictiveParseException;
 import parssist.parser.top_down_analysis.nrdparser.util.Grammar;
+import parssist.parser.top_down_analysis.nrdparser.util.Production;
 import parssist.parser.top_down_analysis.nrdparser.util.Stack;
 
 
@@ -26,6 +34,7 @@ public class TabledrivenPredictiveParser extends Parser {
     private final Token EMPTY_TOKEN = new Token(new TokenType(CONFIG.getProperty("LEXER.EMPTY_SYMBOL"), Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL);
     private final Grammar grammar;
     private final Stack<Token> stack;
+    private final List<Production>[][] parseTable;
 
     private String w$;
 
@@ -43,7 +52,13 @@ public class TabledrivenPredictiveParser extends Parser {
         this.stack = new Stack<>();
         this.stack.push(EMPTY_TOKEN);
         this.stack.push(grammar.getStartsymbol());
+
+        this.parseTable = createParseTable(grammar);
     }
+
+    public TabledrivenPredictiveParser(final Grammar grammar) {
+        this(grammar, "");
+    }  
 
 
     /**
@@ -103,6 +118,88 @@ public class TabledrivenPredictiveParser extends Parser {
         }
 */
         return true;
+    }
+
+
+    /**
+     * Creates a LL(1) parse table.
+     * The y-axis is the vocabulary sorted by {@link Grammar#getVocabulary()}, the x-axis is the alphabet sorted by {@link Grammar#getAlphabet()}.
+     * The grammar should be preprocessed (see {@link Grammar#splitProductions(List)}).
+     * @param grammar The grammar.
+     * @return The parse table.
+     * @throws IllegalArgumentException If the grammar is not preprocessed.
+     */
+    @SuppressWarnings("unchecked") 
+    List<Production>[][] createParseTable(final Grammar grammar) throws IllegalArgumentException {
+        if(grammar.isPreproc()) throw new IllegalArgumentException(CONFIG.getProperty("NONREC.PARSER.ERROR.PREPROCESSED"));
+
+        final List<Production>[][] parseTable = new ArrayList[grammar.getVocabulary().size()][grammar.getAlphabet().size()];
+      
+        for(int i = 0; i < parseTable.length; i++) {
+            for(int j = 0; j < parseTable[i].length; j++) {
+                parseTable[i][j] = new ArrayList<>();
+            }
+        }
+
+        for(final Token nonTerminal : grammar.getVocabulary()) {
+            for(final Production production : grammar.getProductions()) {
+                if(production.getLhs().equals(nonTerminal)) { // Gets all productions of a certain non terminal
+                    Set<Token> first = grammar.first(nonTerminal.symbol());
+                    Set<Token> follow = grammar.follow(nonTerminal.symbol());
+
+                    for(final Token terminal : first) {
+                        if(!terminal.equals(new Token(new TokenType(CONFIG.getProperty("LEXER.EMPTY_SYMBOL"), Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL))) {
+                            ArrayList<Production> productions = (ArrayList<Production>) parseTable[grammar.getVocabulary().indexOf(nonTerminal)][grammar.getAlphabet().indexOf(terminal)];
+                            
+                            if(checkProductionNotInList(productions, production)) {
+                                productions.add(production);
+                            }
+                        }
+                    }
+
+                    if(hasSetEmptySymbol(first)) {
+                        for(final Token terminal : follow) {
+                            ArrayList<Production> productions = (ArrayList<Production>)parseTable[grammar.getVocabulary().indexOf(nonTerminal)][grammar.getAlphabet().indexOf(terminal)];
+                            
+                            if(checkProductionNotInList(productions, production)) {
+                                productions.add(production);
+                            }
+                        }
+                    
+                    }
+                }
+            }
+        }
+
+        return parseTable;
+    }
+
+
+    /**
+     * Checks if a production is already in a list.
+     * @param productions The list of productions.
+     * @param production The production to check.
+     * @return True if the production is not in the list, false otherwise.
+     */
+    private boolean checkProductionNotInList(final ArrayList<Production> productions, final Production production) {
+        for(final Production p : productions) {
+            if(p.equals(production)) return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks if a set contains the empty symbol.
+     * @param set The set to check.
+     * @return True if the set contains the empty symbol, false otherwise.
+     */
+    private boolean hasSetEmptySymbol(final Set<Token> set) {
+        for(final Token token : set) {
+            if(token.equals(new Token(new TokenType(CONFIG.getProperty("LEXER.EMPTY_SYMBOL"), Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL))) return true;
+        }
+
+        return false;
     }
 
 

@@ -1,18 +1,21 @@
-package parssist.parser.top_down_analysis.nrdparser.util;
-import java.util.*;
+package parssist.parser.top_down_analysis.nrdparser;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
+import parssist.parser.top_down_analysis.nrdparser.util.Grammar;
+import parssist.parser.top_down_analysis.nrdparser.util.Production;
 
 
 /**
- * Testclass for {@link Grammar}.
+ * Testclass for {@link TabledrivenPredictiveParser}.
  */
-public class GrammarTest {
+public class TabledrivenPredictiveParserTest {
     private List<Production> productions;
     private List<Token> vocabulary; 
     private List<Token> alphabet;
@@ -168,48 +171,29 @@ public class GrammarTest {
         );
         
 
-        grammar = new Grammar(new ArrayList<>(), vocabulary, alphabet, productions, startsymbol, false);
+        grammar = new Grammar(new ArrayList<>(), vocabulary, alphabet, productions, startsymbol, true);
     }
 
 
     /**
-     * Test the first function. Maybe it is better to compute the most below non terminal first, because then the upper ones are already in the set.
+     * Test the {@link TabledrivenPredictiveParser#createParseTable(Grammar)} method.
      */
     @Test
-    @DisplayName("Test the FIRST function.")
-    public void testFirstIntegration() {        
-        String first_e = grammar.first("E").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
-        String first_e_ = grammar.first("E_").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
-        String first_t = grammar.first("T").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
-        String first_t_ = grammar.first("T_").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
-        String first_f = grammar.first("F").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
+    public void testCreateParseTable() {
+        final TabledrivenPredictiveParser parser = new TabledrivenPredictiveParser(grammar);
 
+        List<Production>[][] parseTable = parser.createParseTable(grammar);
 
-        assert(first_e.equals("id("));
-        assert(first_e_.equals("+$"));
-        assert(first_t.equals("id("));
-        assert(first_t_.equals("*$"));
-        assert(first_f.equals("id("));
-    }
-
-    
-    /**
-     * Test the follow function.
-     */
-    @Test
-    @DisplayName("Test the FOLLOW function.")
-    public void testFollowIntegration() {        
-        String follow_e = grammar.follow("E").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
-        String follow_e_ = grammar.follow("E_").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
-        String follow_t = grammar.follow("T").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
-        String follow_t_ = grammar.follow("T_").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
-        String follow_f = grammar.follow("F").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
-
-
-        assert(follow_e.equals("$)"));
-        assert(follow_e_.equals("$)"));
-        assert(follow_t.equals("$)+"));
-        assert(follow_t_.equals("$)+"));
-        assert(follow_f.equals("$)*+"));
+        // print parse table
+        System.out.println("Parse table:");
+        for(int i = 0; i < parseTable.length; i++) {
+            for(int j = 0; j < parseTable[i].length; j++) {
+                System.out.print("[" + i + "][" + j + "]: ");
+                for(int k = 0; k < parseTable[i][j].size(); k++) {
+                    System.out.print(parseTable[i][j].get(k) + " ");
+                }
+                System.out.println();
+            }
+        }
     }
 }

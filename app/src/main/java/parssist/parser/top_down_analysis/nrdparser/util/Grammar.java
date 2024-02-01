@@ -1,5 +1,6 @@
 package parssist.parser.top_down_analysis.nrdparser.util;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -15,18 +16,21 @@ import parssist.lexer.util.TokenType;
 /**
  * Grammar class which is used to describe a parsergrammar.
  * It uses a extended BNF format, which corresponds to the 4-tuple (V, A, P, S).
- * V is a set of non-terminals (vocabulary), A is the alphabet, P the production rules and S the start symbol.
+ * V is a set of non-terminals (vocabulary), A is the alphabet (including the empty symbol), P the production rules and S the start symbol.
+ * The grammar takes a list of productions and optionally transforms it into a list of productions, where the rhs has only one symbol (see {@link Grammar#splitProductions(List)}).
+ * This is needed for the {@link TabledrivenPredictiveParser}.
  */
 public class Grammar {
     public static final String EMPTY_SYMBOL = "$";
 
     private static final ParssistConfig CONFIG = ParssistConfig.getInstance();
 
-    private final Set<TokenType> tokentypes;
-    private final Set<Token> vocabulary;
-    private final Set<Token> alphabet;
+    private final List<TokenType> tokentypes;
+    private final List<Token> vocabulary;
+    private final List<Token> alphabet;
     private final List<Production> productions;
     private final Token startsymbol;
+    private final boolean preproc;
 
 
     /**
@@ -36,9 +40,10 @@ public class Grammar {
      * @param alphabet Alphabet of the grammar.
      * @param productions Productionrules of the grammar.
      * @param startsymbol Startsymbol of the grammar.
+     * @param preproc If true, the productions will be preprocessed (see {@link Grammar#splitProductions(List)}).
      * @throws NullPointerException If one argument is null.
      */
-    public Grammar(final Set<TokenType> tokentypes, final Set<Token> vocabulary, final Set<Token> alphabet, final List<Production> productions, final Token startsymbol) throws NullPointerException {
+    public Grammar(final List<TokenType> tokentypes, final List<Token> vocabulary, final List<Token> alphabet, final List<Production> productions, final Token startsymbol, final boolean preproc) throws NullPointerException {
         Objects.requireNonNull(tokentypes);
         Objects.requireNonNull(vocabulary);
         Objects.requireNonNull(alphabet);
@@ -48,20 +53,24 @@ public class Grammar {
         this.tokentypes = tokentypes;
         this.vocabulary = vocabulary;
         this.alphabet = alphabet;
-        this.productions = productions;
         this.startsymbol = startsymbol;
+        
+        if(preproc) this.productions = splitProductions(productions);
+        else this.productions = productions;
+
+        this.preproc = preproc;
     }
 
 
-    public Set<TokenType> getTokentypes() {
+    public List<TokenType> getTokentypes() {
         return tokentypes;
     }
 
-    public Set<Token> getVocabulary() {
+    public List<Token> getVocabulary() {
         return vocabulary;
     }
 
-    public Set<Token> getAlphabet() {
+    public List<Token> getAlphabet() {
         return alphabet;
     }
 
@@ -71,6 +80,10 @@ public class Grammar {
 
     public Token getStartsymbol() {
         return startsymbol;
+    }
+
+    public boolean isPreproc() {
+        return preproc;
     }
 
 
@@ -158,7 +171,7 @@ public class Grammar {
         return result;
     }
 
-    
+
     /**
      * Checks if the given symbol is a terminal.
      * @param symbol The symbol which is checked.
@@ -179,5 +192,27 @@ public class Grammar {
         return vocabulary.stream()
                         .map(e -> e.symbol())
                         .anyMatch(e -> e.equals(symbol));
+    }
+
+    /**
+     * Splits the given productions into a list of productions, where the rhs has only one symbol.
+     * @param productions The productions which should be splitted.
+     * @return The splitted productions.
+     */
+    private List<Production> splitProductions(final List<Production> productions) {
+        final List<Production> splittedProductions = new ArrayList<>();
+
+        productions.forEach(p -> {
+            if(p.getRhs().size() > 1) {
+                for(final Token[] rh : p.getRhs()) {
+                    final List<Token[]> rhs = new ArrayList<>();
+                    rhs.add(rh);
+
+                    splittedProductions.add(new Production(p.getLhs(), rhs));
+                }
+            } else splittedProductions.add(p);
+        });
+
+        return splittedProductions;
     }
 }
