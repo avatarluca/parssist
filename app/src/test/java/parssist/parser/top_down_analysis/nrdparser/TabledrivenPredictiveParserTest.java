@@ -1,9 +1,11 @@
 package parssist.parser.top_down_analysis.nrdparser;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import parssist.lexer.util.Token;
@@ -16,16 +18,8 @@ import parssist.parser.top_down_analysis.nrdparser.util.Production;
  * Testclass for {@link TabledrivenPredictiveParser}.
  */
 public class TabledrivenPredictiveParserTest {
-    private List<Production> productions;
-    private List<Token> vocabulary; 
-    private List<Token> alphabet;
-    private Token startsymbol;
-    private Grammar grammar;
-    private List<Token[]> list1;
-    private List<Token[]> list2;
-    private List<Token[]> list3;
-    private List<Token[]> list4;
-    private List<Token[]> list5;
+    private Grammar grammar1;
+    private Grammar grammar2;
 
 
     /**
@@ -37,15 +31,15 @@ public class TabledrivenPredictiveParserTest {
      * F -> (E) | id
      * (Example 4.17 from the {@link <a href="https://suif.stanford.edu/dragonbook/">Dragonbook</a>})
      */
-    @BeforeEach public void setUp() {
-        productions = new ArrayList<>();
-        vocabulary = new ArrayList<>();
-        alphabet = new ArrayList<>();
-        list1 = new ArrayList<>();
-        list2 = new ArrayList<>();
-        list3 = new ArrayList<>();
-        list4 = new ArrayList<>();
-        list5 = new ArrayList<>();
+    public void setUpGrammar1() {
+        List<Production> productions = new ArrayList<>();
+        List<Token> vocabulary = new ArrayList<>();
+        List<Token> alphabet = new ArrayList<>();
+        List<Token[]> list1 = new ArrayList<>();
+        List<Token[]> list2 = new ArrayList<>();
+        List<Token[]> list3 = new ArrayList<>();
+        List<Token[]> list4 = new ArrayList<>();
+        List<Token[]> list5 = new ArrayList<>();
         
 
         list1.add(new Token[] {
@@ -166,34 +160,282 @@ public class TabledrivenPredictiveParserTest {
             new TokenType("EMPTY_SYMBOL", "", 0, false), "$"
         ));
 
-        startsymbol = new Token(
+        Token startsymbol = new Token(
             new TokenType("NONTERMINAL", "", 0, false), "E"
         );
         
 
-        grammar = new Grammar(new ArrayList<>(), vocabulary, alphabet, productions, startsymbol, true);
+        grammar1 = new Grammar(new ArrayList<>(), vocabulary, alphabet, productions, startsymbol, true);
+    }
+
+    /**
+     * Set up the grammar, by using the following grammar:
+     * S -> iEtSS' | a
+     * S' -> eS | $
+     * E -> b
+     * (Example 4.19 from the {@link <a href="https://suif.stanford.edu/dragonbook/">Dragonbook</a>})
+     */
+    public void setUpGrammar2() {
+        List<Production> productions = new ArrayList<>();
+        List<Token> vocabulary = new ArrayList<>();
+        List<Token> alphabet = new ArrayList<>();
+        List<Token[]> list1 = new ArrayList<>();
+        List<Token[]> list2 = new ArrayList<>();
+        List<Token[]> list3 = new ArrayList<>();
+        
+
+        list1.add(new Token[] {
+            new Token(new TokenType("TERMINAL", "", 0, false), "i"), 
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "E"),
+            new Token(new TokenType("TERMINAL", "", 0, false), "t"), 
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "S"), 
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "S_")
+        });
+        list1.add(new Token[] {
+            new Token(new TokenType("TERMINAL", "", 0, false), "a")
+        });
+        productions.add(
+            new Production(
+                new Token(
+                    new TokenType("NONTERMINAL", "", 0, false), "S"
+                ), 
+                list1
+            )
+        );
+
+
+        list2.add(new Token[] {
+            new Token(new TokenType("TERMINAL", "", 0, false), "e"),
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "S")
+        });
+        list2.add(new Token[] {
+            new Token(new TokenType("EMPTY_SYMBOL", "", 0, false), "$")
+        });
+        productions.add(
+            new Production(
+                new Token(
+                    new TokenType("NONTERMINAL", "", 0, false), "S_"
+                ), 
+                list2
+            )
+        );
+
+
+        list3.add(new Token[] {
+            new Token(new TokenType("TERMINAL", "", 0, false), "b")
+        });
+        productions.add(
+            new Production(
+                new Token(
+                    new TokenType("NONTERMINAL", "", 0, false), "E"
+                ), 
+                list3
+            )
+        );
+
+
+        vocabulary.add(new Token(
+            new TokenType("NONTERMINAL", "", 0, false), "S"
+        ));
+        vocabulary.add(new Token(
+            new TokenType("NONTERMINAL", "", 0, false), "S_"
+        ));
+        vocabulary.add(new Token(
+            new TokenType("NONTERMINAL", "", 0, false), "E"
+        ));
+        
+        alphabet.add(new Token(
+            new TokenType("TERMINAL", "", 0, false), "a"
+        ));
+        alphabet.add(new Token(
+            new TokenType("TERMINAL", "", 0, false), "b"
+        ));
+        alphabet.add(new Token(
+            new TokenType("TERMINAL", "", 0, false), "e"
+        ));
+        alphabet.add(new Token(
+            new TokenType("TERMINAL", "", 0, false), "i"
+        ));
+        alphabet.add(new Token(
+            new TokenType("TERMINAL", "", 0, false), "t"
+        ));
+        alphabet.add(new Token(
+            new TokenType("EMPTY_SYMBOL", "", 0, false), "$"
+        ));
+
+        Token startsymbol = new Token(
+            new TokenType("NONTERMINAL", "", 0, false), "S"
+        );
+        
+
+        grammar2 = new Grammar(new ArrayList<>(), vocabulary, alphabet, productions, startsymbol, true);
     }
 
 
     /**
-     * Test the {@link TabledrivenPredictiveParser#createParseTable(Grammar)} method.
+     * Test the {@link TabledrivenPredictiveParser#createParseTable(Grammar)} method with {@link TabledrivenPredictiveParserTest#setUpGrammar1()}.
      */
     @Test
-    public void testCreateParseTable() {
-        final TabledrivenPredictiveParser parser = new TabledrivenPredictiveParser(grammar);
+    @DisplayName("Test with grammar 1")
+    public void testCreateParseTableGrammar1() {
+        setUpGrammar1();
 
-        List<Production>[][] parseTable = parser.createParseTable(grammar);
+        final TabledrivenPredictiveParser parser = new TabledrivenPredictiveParser(grammar1);
 
-        // print parse table
-        System.out.println("Parse table:");
-        for(int i = 0; i < parseTable.length; i++) {
-            for(int j = 0; j < parseTable[i].length; j++) {
-                System.out.print("[" + i + "][" + j + "]: ");
-                for(int k = 0; k < parseTable[i][j].size(); k++) {
-                    System.out.print(parseTable[i][j].get(k) + " ");
-                }
-                System.out.println();
-            }
+        List<Production>[][] parseTable = parser.createParseTable(grammar1);
+        List<Token[]> list1 = new ArrayList<>();
+        List<Token[]> list2_1 = new ArrayList<>();
+        List<Token[]> list2_2 = new ArrayList<>();
+        List<Token[]> list3 = new ArrayList<>();
+        List<Token[]> list4_1 = new ArrayList<>();
+        List<Token[]> list4_2 = new ArrayList<>();
+        List<Token[]> list5_1 = new ArrayList<>();
+        List<Token[]> list5_2 = new ArrayList<>();
+        list1.add(new Token[] {
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "T"), 
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "E_")
+        });
+        list2_1.add(new Token[] {
+            new Token(new TokenType("TERMINAL", "", 0, false), "+"), 
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "T"),
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "E_")
+        });
+        list2_2.add(new Token[] {
+            new Token(new TokenType("EMPTY_SYMBOL", "", 0, false), "$")
+        });
+        list3.add(new Token[] {
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "F"),
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "T_")
+        });
+        list4_1.add(new Token[] {
+            new Token(new TokenType("TERMINAL", "", 0, false), "*"), 
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "F"),
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "T_")
+        });
+        list4_2.add(new Token[] {
+            new Token(new TokenType("EMPTY_SYMBOL", "", 0, false), "$")
+        });
+        list5_1.add(new Token[] {
+            new Token(new TokenType("TERMINAL", "", 0, false), "("),
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "E"),
+            new Token(new TokenType("TERMINAL", "", 0, false), ")")
         }
+        );
+        list5_2.add(new Token[] {
+            new Token(new TokenType("TERMINAL", "", 0, false), "id")
+        });
+
+        assertEquals(parseTable[0][0].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "E"), list1));
+        assertEquals(parseTable[0][4].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "E"), list1));
+        assertEquals(parseTable[0][0].size(), 1);
+        assertEquals(parseTable[0][1].size(), 0);
+        assertEquals(parseTable[0][2].size(), 0);
+        assertEquals(parseTable[0][3].size(), 0);
+        assertEquals(parseTable[0][4].size(), 1);
+        assertEquals(parseTable[0][5].size(), 0);
+
+        assertEquals(parseTable[1][1].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "E_"), list2_2));
+        assertEquals(parseTable[1][3].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "E_"), list2_1));
+        assertEquals(parseTable[1][5].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "E_"), list2_2));
+        assertEquals(parseTable[1][0].size(), 0);
+        assertEquals(parseTable[1][1].size(), 1);
+        assertEquals(parseTable[1][2].size(), 0);
+        assertEquals(parseTable[1][3].size(), 1);
+        assertEquals(parseTable[1][4].size(), 0);
+        assertEquals(parseTable[1][5].size(), 1);
+
+        assertEquals(parseTable[2][0].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "T"), list3));
+        assertEquals(parseTable[2][4].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "T"), list3));
+        assertEquals(parseTable[2][0].size(), 1);
+        assertEquals(parseTable[2][1].size(), 0);
+        assertEquals(parseTable[2][2].size(), 0);
+        assertEquals(parseTable[2][3].size(), 0);
+        assertEquals(parseTable[2][4].size(), 1);
+        assertEquals(parseTable[2][5].size(), 0);
+
+        assertEquals(parseTable[3][1].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "T_"), list4_2));
+        assertEquals(parseTable[3][2].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "T_"), list4_1));
+        assertEquals(parseTable[3][3].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "T_"), list4_2));
+        assertEquals(parseTable[3][5].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "T_"), list4_2));
+        assertEquals(parseTable[3][0].size(), 0);
+        assertEquals(parseTable[3][1].size(), 1);
+        assertEquals(parseTable[3][2].size(), 1);
+        assertEquals(parseTable[3][3].size(), 1);
+        assertEquals(parseTable[3][4].size(), 0);
+        assertEquals(parseTable[3][5].size(), 1);
+
+        assertEquals(parseTable[4][0].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "F"), list5_1));
+        assertEquals(parseTable[4][4].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "F"), list5_2));
+        assertEquals(parseTable[4][0].size(), 1);
+        assertEquals(parseTable[4][1].size(), 0);
+        assertEquals(parseTable[4][2].size(), 0);
+        assertEquals(parseTable[4][3].size(), 0);
+        assertEquals(parseTable[4][4].size(), 1);
+        assertEquals(parseTable[4][5].size(), 0);
+    }
+
+
+    /**
+     * Test the {@link TabledrivenPredictiveParser#createParseTable(Grammar)} method with {@link TabledrivenPredictiveParserTest#setUpGrammar2()}.
+     */
+    @Test
+    @DisplayName("Test with grammar 2")
+    public void testCreateParseTableGrammar2() {
+        setUpGrammar2();
+        final TabledrivenPredictiveParser parser = new TabledrivenPredictiveParser(grammar2);
+
+        List<Production>[][] parseTable = parser.createParseTable(grammar2);
+        List<Token[]> list1_1 = new ArrayList<>();        
+        List<Token[]> list1_2 = new ArrayList<>();
+        List<Token[]> list2_1 = new ArrayList<>();
+        List<Token[]> list2_2 = new ArrayList<>();
+        List<Token[]> list3 = new ArrayList<>();
+        list1_1.add(new Token[] {
+            new Token(new TokenType("TERMINAL", "", 0, false), "i"), 
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "E"),
+            new Token(new TokenType("TERMINAL", "", 0, false), "t"), 
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "S"), 
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "S_")
+        });
+        list1_2.add(new Token[] {
+            new Token(new TokenType("TERMINAL", "", 0, false), "a")
+        });
+        list2_1.add(new Token[] {
+            new Token(new TokenType("TERMINAL", "", 0, false), "e"),
+            new Token(new TokenType("NONTERMINAL", "", 0, false), "S")
+        });
+        list2_2.add(new Token[] {
+            new Token(new TokenType("EMPTY_SYMBOL", "", 0, false), "$")
+        });
+        list3.add(new Token[] {
+            new Token(new TokenType("TERMINAL", "", 0, false), "b")
+        });
+
+        assertEquals(parseTable[0][0].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "S"), list1_2));
+        assertEquals(parseTable[0][3].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "S"), list1_1));
+        assertEquals(parseTable[0][0].size(), 1);
+        assertEquals(parseTable[0][1].size(), 0);
+        assertEquals(parseTable[0][2].size(), 0);
+        assertEquals(parseTable[0][3].size(), 1);
+        assertEquals(parseTable[0][4].size(), 0);
+        assertEquals(parseTable[0][5].size(), 0);
+
+        assertEquals(parseTable[1][2].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "S_"), list2_1));
+        assertEquals(parseTable[1][2].get(1), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "S_"), list2_2));
+        assertEquals(parseTable[1][5].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "S_"), list2_2));
+        assertEquals(parseTable[1][0].size(), 0);
+        assertEquals(parseTable[1][1].size(), 0);
+        assertEquals(parseTable[1][2].size(), 2);
+        assertEquals(parseTable[1][3].size(), 0);
+        assertEquals(parseTable[1][4].size(), 0);
+        assertEquals(parseTable[1][5].size(), 1);
+
+        assertEquals(parseTable[2][1].get(0), new Production(new Token(new TokenType("NONTERMINAL", "", 0, false), "E"), list3));
+        assertEquals(parseTable[2][0].size(), 0);
+        assertEquals(parseTable[2][1].size(), 1);
+        assertEquals(parseTable[2][2].size(), 0);
+        assertEquals(parseTable[2][3].size(), 0);
+        assertEquals(parseTable[2][4].size(), 0);
+        assertEquals(parseTable[2][5].size(), 0);
     }
 }

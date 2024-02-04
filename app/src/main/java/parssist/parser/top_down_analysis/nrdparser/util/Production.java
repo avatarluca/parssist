@@ -28,6 +28,22 @@ public class Production {
         return false;
     }
 
+    @Override public String toString() {
+        final StringBuilder sb = new StringBuilder();
+
+        sb.append(lhs.symbol()).append(" -> ");
+
+        for(int i = 0; i < rhs.size(); i++) {
+            for(int j = 0; j < rhs.get(i).length; j++) {
+                sb.append(rhs.get(i)[j].symbol());
+            }
+            sb.append(" ");
+            if(i < rhs.size() - 1) sb.append("| ");
+        }
+
+        return sb.toString();
+    }
+
 
     public Token getLhs() {
         return lhs;
@@ -35,6 +51,21 @@ public class Production {
 
     public List<Token[]> getRhs() {
         return rhs;
+    }
+
+
+    /**
+     * Check if the rhs of this production contains the empty symbol.
+     * @return True if the rhs of this production contains the empty symbol, false otherwise.
+     */
+    public boolean hasEmptySymbol() {
+        for(final Token[] tokens : rhs) {
+            for(final Token token : tokens) {
+                if(token.symbol().equals(Grammar.EMPTY_SYMBOL)) return true;
+            }
+        }
+
+        return false;
     }
 
 

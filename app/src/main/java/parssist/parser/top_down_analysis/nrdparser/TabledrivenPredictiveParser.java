@@ -131,7 +131,7 @@ public class TabledrivenPredictiveParser extends Parser {
      */
     @SuppressWarnings("unchecked") 
     List<Production>[][] createParseTable(final Grammar grammar) throws IllegalArgumentException {
-        if(grammar.isPreproc()) throw new IllegalArgumentException(CONFIG.getProperty("NONREC.PARSER.ERROR.PREPROCESSED"));
+        if(!grammar.isPreproc()) throw new IllegalArgumentException(CONFIG.getProperty("NONREC.PARSER.ERROR.PREPROCESSED"));
 
         final List<Production>[][] parseTable = new ArrayList[grammar.getVocabulary().size()][grammar.getAlphabet().size()];
       
@@ -142,30 +142,32 @@ public class TabledrivenPredictiveParser extends Parser {
         }
 
         for(final Token nonTerminal : grammar.getVocabulary()) {
+            Set<Token> first = grammar.first(nonTerminal.symbol());
+            Set<Token> follow = grammar.follow(nonTerminal.symbol(), nonTerminal.symbol());
+
             for(final Production production : grammar.getProductions()) {
                 if(production.getLhs().equals(nonTerminal)) { // Gets all productions of a certain non terminal
-                    Set<Token> first = grammar.first(nonTerminal.symbol());
-                    Set<Token> follow = grammar.follow(nonTerminal.symbol());
-
                     for(final Token terminal : first) {
-                        if(!terminal.equals(new Token(new TokenType(CONFIG.getProperty("LEXER.EMPTY_SYMBOL"), Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL))) {
+                        if(!production.hasEmptySymbol() && !terminal.equals(new Token(new TokenType(CONFIG.getProperty("LEXER.EMPTY_SYMBOL"), Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL))) {
                             ArrayList<Production> productions = (ArrayList<Production>) parseTable[grammar.getVocabulary().indexOf(nonTerminal)][grammar.getAlphabet().indexOf(terminal)];
                             
-                            if(checkProductionNotInList(productions, production)) {
+                            if(checkProductionNotInList(productions, production) && (production.getRhs().get(0)[0].tokenType().name().equals(CONFIG.getProperty("LEXER.TERMINAL")) ? terminal.equals(production.getRhs().get(0)[0]) : true)){
                                 productions.add(production);
                             }
-                        }
+                        } 
                     }
 
                     if(hasSetEmptySymbol(first)) {
                         for(final Token terminal : follow) {
                             ArrayList<Production> productions = (ArrayList<Production>)parseTable[grammar.getVocabulary().indexOf(nonTerminal)][grammar.getAlphabet().indexOf(terminal)];
-                            
+
                             if(checkProductionNotInList(productions, production)) {
-                                productions.add(production);
+                                Token[] tokens = new Token[]{new Token(new TokenType(CONFIG.getProperty("LEXER.EMPTY_SYMBOL"), Grammar.EMPTY_SYMBOL, 0, false),  Grammar.EMPTY_SYMBOL)};
+                                List<Token[]> rhs = new ArrayList<>();
+                                rhs.add(tokens);
+                                productions.add(new Production(production.getLhs(), rhs));
                             }
                         }
-                    
                     }
                 }
             }

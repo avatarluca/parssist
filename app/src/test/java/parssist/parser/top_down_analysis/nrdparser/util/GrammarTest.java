@@ -199,11 +199,11 @@ public class GrammarTest {
     @Test
     @DisplayName("Test the FOLLOW function.")
     public void testFollowIntegration() {        
-        String follow_e = grammar.follow("E").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
-        String follow_e_ = grammar.follow("E_").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
-        String follow_t = grammar.follow("T").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
-        String follow_t_ = grammar.follow("T_").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
-        String follow_f = grammar.follow("F").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
+        String follow_e = grammar.follow("E", "E").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
+        String follow_e_ = grammar.follow("E_", "E_").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
+        String follow_t = grammar.follow("T", "T").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
+        String follow_t_ = grammar.follow("T_", "T_").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
+        String follow_f = grammar.follow("F", "F").stream().map(e->((Token) e).symbol()).reduce("", (a, b) -> a + b);
 
 
         assert(follow_e.equals("$)"));

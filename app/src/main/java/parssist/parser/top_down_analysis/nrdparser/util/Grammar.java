@@ -115,7 +115,6 @@ public class Grammar {
             }
         } else throw new IllegalArgumentException(CONFIG.getProperty("GRAMMAR.ERROR.INVALID_SYMBOL") + a);
         
-
         return result;
     }
 
@@ -123,10 +122,11 @@ public class Grammar {
      * FOLLOW(A) is the set of all terminal definitions that can follow directly after A.
      * Startsymbol S always has {@link Grammar#EMPTY_SYMBOL} in FOLLOW(S), because {@link Grammar#EMPTY_SYMBOL} is the end of the input string.
      * @param a The symbol, which is used to get the follow set.
+     * @param a_ The symbol, which is used to get the follow set. This is needed to prevent left recursion.
      * @return The follow set of the given symbol.
      * @throws IllegalArgumentException If the given symbol is not a non terminal symbol.
      */
-    public Set<Token> follow(final String a) throws IllegalArgumentException {
+    public Set<Token> follow(final String a, final String a_) throws IllegalArgumentException {
         Comparator<Token> tokenComparator = Comparator
                 .comparing(Token::symbol)
                 .thenComparing(e -> e.tokenType().name());
@@ -143,9 +143,8 @@ public class Grammar {
                     
                     for(int i = 0; i < rules.length; i++) {
                         if(rules[i].symbol().equals(a)) {
-                            
                             if(i == rules.length - 1) { // There isnt anything to follow => check if lhs != rhs
-                                if(!production.getLhs().symbol().equals(a)) result.addAll(follow(production.getLhs().symbol()));
+                                if(!production.getLhs().symbol().equals(a) && !production.getLhs().symbol().equals(a_)) result.addAll(follow(production.getLhs().symbol(), a_));
                             } 
                             else {
                                 if(isSymbolNonTerminal(rules[i + 1].symbol())) {
@@ -153,8 +152,8 @@ public class Grammar {
 
                                     for(Token token : first) {
                                         if(token.symbol().equals(Grammar.EMPTY_SYMBOL)) {
-                                            if(i + 2 < rules.length) result.addAll(follow(rules[i + 2].symbol()));
-                                            else result.addAll(follow(production.getLhs().symbol()));
+                                            if(i + 2 < rules.length) result.addAll(follow(rules[i + 2].symbol(), a_));
+                                            else if(!production.getLhs().symbol().equals(a)) result.addAll(follow(production.getLhs().symbol(), a_));
                                         } else result.add(token);
                                     }
                                 }
