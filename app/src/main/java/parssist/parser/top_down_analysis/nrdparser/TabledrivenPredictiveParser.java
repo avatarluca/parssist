@@ -1,22 +1,19 @@
 package parssist.parser.top_down_analysis.nrdparser;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
-import org.checkerframework.checker.units.qual.s;
-
 import parssist.ParssistConfig;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
 import parssist.parser.Parser;
+import parssist.parser.top_down_analysis.nrdparser.exception.NoLL1GrammarException;
 import parssist.parser.top_down_analysis.nrdparser.exception.NonRecursivePredictiveParseException;
 import parssist.parser.top_down_analysis.nrdparser.util.Grammar;
 import parssist.parser.top_down_analysis.nrdparser.util.Production;
@@ -80,45 +77,73 @@ public class TabledrivenPredictiveParser extends Parser {
         this.w$ = w + Grammar.EMPTY_SYMBOL;
     }
 
+
+    /**
+     * Print parse table.
+     */
+    public void printParseTable() {
+        for(int i = 0; i < parseTable.length; i++) {
+            for(int j = 0; j < parseTable[i].length; j++) {
+                System.out.print("[" + i + "][" + j + "]: ");
+                for(Production production : parseTable[i][j]) {
+                    System.out.print(production + " ");
+                }
+                System.out.println();
+            }
+        }
+    }
  
     /**
-     * TODO
+     * Compute the system analysis: Checks if a word is valid according to the grammar and in the language of the grammar.
      * @return True if the input string is valid, false otherwise.
      * @throws NonRecursivePredictiveParseException If there is an exception while parsing the input.
+     * @throws NoLL1GrammarException If the grammar is not LL(1).
      */
-    public boolean computeSystemAnalysis() throws NonRecursivePredictiveParseException {
-        final int ip = 0; // first symbol of w$
-        /* 
-        while(!stack.isEmpty()) {
+    public boolean computeSystemAnalysis() throws NonRecursivePredictiveParseException, NoLL1GrammarException {
+        if(!isLL1(parseTable)) throw new NoLL1GrammarException(CONFIG.getProperty("NONREC.PARSER.ERROR.NO_LL1_GRAMMAR"));
+
+        int ip = 0; // first symbol of w$
+        
+        do {
             final Token X = stack.peek(); // top of stack
             final Token a = getNextToken(ip); // symbol of w$
 
             if(a == null) throw new NonRecursivePredictiveParseException(CONFIG.getProperty("NONREC.PARSER.ERROR.INVALID_TOKEN"));
 
-            if(isTerminal(X) || X.symbol().equals(Grammar.EMPTY_SYMBOL)) {
+            if(grammar.isSymbolTerminal(X.symbol()) || X.symbol().equals(Grammar.EMPTY_SYMBOL)) {
                 if(X.equals(a)) {
                     stack.pop();
                     ip += a.symbol().length();
-                } else throw new NonRecursivePredictiveParseException(CONFIG.getProperty("NONREC.PARSER.ERROR.EMPTY_SYMBOL"));
-            } else if(X.getTokenType().isTerminal()) {
-                if(!token.getValue().equals(getNextToken().getValue())) return false;
-            } else {
-                final Token nextToken = getNextToken();
-                final Token[] production = grammar.getProductions().stream()
-                        .filter(p -> p.getLhs().getValue().equals(token.getValue()))
-                        .filter(p -> p.getRhs()[0].getValue().equals(nextToken.getValue()))
-                        .findFirst()
-                        .orElse(null)
-                        .getRhs();
+                } else throw new NonRecursivePredictiveParseException(CONFIG.getProperty("NONREC.PARSER.ERROR.EMPTY_SYMBOL") + stack);
+            } else { 
+                final Production production = parseTable[grammar.getVocabulary().indexOf(X)][grammar.getAlphabet().indexOf(a)].get(0);
 
-                for(int i = production.length - 1; i >= 0; i--) {
-                    stack.push(production[i]);
+                if(production == null) throw new NonRecursivePredictiveParseException(CONFIG.getProperty("NONREC.PARSER.ERROR.NO_PRODUCTION"));
+
+                stack.pop();
+                
+                System.out.println("ALT" + stack + " " + production);
+                for(int i = production.getRhs().size() - 1; i >= 0; i--) {
+                    if(!production.getRhs().get(i)[0].symbol().equals(Grammar.EMPTY_SYMBOL)) stack.push(production.getRhs().get(i)[0]);
                 }
+                System.out.println("NEU" + stack + " " + production);
+
+                System.out.println(stack);
             }
-        }
-*/
+        } while(stack.peek() != EMPTY_TOKEN && stack.size() <= 1); // stack is empty
+
         return true;
     }
+
+    /**
+     
+    TODO
+
+    public Node parse() {
+        return null;
+    }
+    
+    */
 
 
     /**
@@ -204,13 +229,13 @@ public class TabledrivenPredictiveParser extends Parser {
         return false;
     }
 
-
     /**
      * Get the next token from the input buffer.
      * @return The next token from the input buffer or null.
      */
     private @Nullable Token getNextToken(final int ip) {
         final String tempW$ = w$.substring(ip);
+
         for(final TokenType tokenType : grammar.getTokentypes()) { // TODO: sort by priority
             final Pattern pattern = Pattern.compile(CONFIG.getProperty("LEXER.REGEX.STARTSYMBOL") + tokenType.regex());
             final Matcher matcher = pattern.matcher(tempW$);
@@ -225,11 +250,22 @@ public class TabledrivenPredictiveParser extends Parser {
     }
 
     /**
-     * Check if a token is a terminal.
-     * @param token The token to check.
-     * @return True if the token is a terminal, false otherwise.
+     * Is grammar LL(1)?
+     * LL(1) grammars are a subset of context-free grammars:
+     * - L: Left-to-right scan of the input
+     * - L: Leftmost derivation
+     * - 1: One token of lookahead
+     * A left recursive or ambiguous grammar can never be LL(1).
+     * @param parseTable The parse table.
+     * @return True if the grammar is LL(1), false otherwise.
      */
-    private boolean isTerminal(final Token token) {
-        return token.tokenType().name().equals(CONFIG.getProperty("LEXER.TERMINAL"));
+    private boolean isLL1(final List<Production>[][] parseTable) {
+        for(int i = 0; i < parseTable.length; i++) {
+            for(int j = 0; j < parseTable[i].length; j++) {
+                if(parseTable[i][j].size() > 1) return false;
+            }
+        }
+
+        return true;
     }
 }

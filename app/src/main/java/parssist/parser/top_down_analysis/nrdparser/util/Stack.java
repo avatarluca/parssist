@@ -59,7 +59,11 @@ public class Stack<T> {
         return stack.size();
     }
 
+
     @Override public String toString() {
-        return stack.toString();
+        return stack.stream()
+                    .map(Object::toString)
+                    .reduce((a, b) -> a + "\n+ " + b)
+                    .orElse("");
     }
 }

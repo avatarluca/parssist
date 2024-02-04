@@ -170,13 +170,12 @@ public class Grammar {
         return result;
     }
 
-
     /**
      * Checks if the given symbol is a terminal.
      * @param symbol The symbol which is checked.
      * @return True if the symbol is a terminal, false otherwise.
      */
-    private boolean isSymbolTerminal(final String symbol) {
+    public boolean isSymbolTerminal(final String symbol) {
         return alphabet.stream()
                         .map(e -> e.symbol())
                         .anyMatch(e -> e.equals(symbol));
@@ -187,12 +186,13 @@ public class Grammar {
      * @param symbol The symbol which is checked.
      * @return True if the symbol is a non-terminal, false otherwise.
      */
-    private boolean isSymbolNonTerminal(final String symbol) {
+    public boolean isSymbolNonTerminal(final String symbol) {
         return vocabulary.stream()
                         .map(e -> e.symbol())
                         .anyMatch(e -> e.equals(symbol));
     }
 
+    
     /**
      * Splits the given productions into a list of productions, where the rhs has only one symbol.
      * @param productions The productions which should be splitted.
