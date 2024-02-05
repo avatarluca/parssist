@@ -1,0 +1,79 @@
+/*
+    GLOBAL
+*/
+
+* {
+    font-family: "stratum","Arial Narrow","Trebuchet MS",sans-serif;
+}
+
+a {
+    text-decoration: none;
+    color: #9E358F;
+}
+
+
+
+
+
+
+/*
+    HEADER
+*/
+
+header {
+    display: flex;
+    flex-direction: column; 
+    justify-content: center; 
+    overflow-x: hidden;
+    width: 100%;
+}
+
+header h1 {
+    font-size: 50px;
+    letter-spacing: 3px;
+}
+
+
+
+
+
+
+/* 
+    MAIN
+*/
+
+button {
+    background-color: #5E5086;
+    border: none;
+    font-family: "stratum","Arial Narrow","Trebuchet MS",sans-serif;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 10px;
+    width: 200px;
+}
+
+
+
+
+
+
+/*
+    FOOTER
+*/
+
+footer {
+    position: fixed;
+    bottom: 10px;
+    width: 100%;
+    text-align: center; 
+}
+
+footer p {
+    font-size: 12px;
+}

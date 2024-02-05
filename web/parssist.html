@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Parssist</title>
+
+    <link rel="stylesheet" href="css/styles.css">
+
+    <script type="module" src="js/parssist/codeeditor/src/codemirror.js"></script>
+</head>
+<body>
+    <section>
+        <textarea id="code" data-mode="grammar" name="input" cols="30" rows="10"></textarea>
+    </section>
+    <script src="js/parssist.js">
+        export const editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+            mode: "parssist_grammar",
+            lineNumbers: true,
+            theme: "default" 
+        });
+    </script>
+</body>
+</html>
