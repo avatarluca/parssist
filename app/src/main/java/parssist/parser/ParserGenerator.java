@@ -11,5 +11,5 @@ abstract public class ParserGenerator {
      * @param packageName Name of the package.
      * @return Sourcecode.
      */
-    abstract public String generateParser(final String parserName, final String packageName);
+    abstract public String generate(final String parserName, final String packageName);
 }

@@ -207,6 +207,27 @@ public class TabledrivenPredictiveParser extends Parser {
 
 
     /**
+     * Is grammar LL(1)?
+     * LL(1) grammars are a subset of context-free grammars:
+     * - L: Left-to-right scan of the input
+     * - L: Leftmost derivation
+     * - 1: One token of lookahead
+     * A left recursive or ambiguous grammar can never be LL(1).
+     * @param parseTable The parse table.
+     * @return True if the grammar is LL(1), false otherwise.
+     */
+    public boolean isLL1(final List<Production>[][] parseTable) {
+        for(int i = 0; i < parseTable.length; i++) {
+            for(int j = 0; j < parseTable[i].length; j++) {
+                if(parseTable[i][j].size() > 1) return false;
+            }
+        }
+
+        return true;
+    }
+
+
+    /**
      * Creates a LL(1) parse table.
      * The y-axis is the vocabulary sorted by {@link Grammar#getVocabulary()}, the x-axis is the alphabet sorted by {@link Grammar#getAlphabet()}.
      * The grammar should be preprocessed (see {@link Grammar#splitProductions(List)}).
@@ -319,25 +340,5 @@ public class TabledrivenPredictiveParser extends Parser {
         }
 
         return null;
-    }
-
-    /**
-     * Is grammar LL(1)?
-     * LL(1) grammars are a subset of context-free grammars:
-     * - L: Left-to-right scan of the input
-     * - L: Leftmost derivation
-     * - 1: One token of lookahead
-     * A left recursive or ambiguous grammar can never be LL(1).
-     * @param parseTable The parse table.
-     * @return True if the grammar is LL(1), false otherwise.
-     */
-    private boolean isLL1(final List<Production>[][] parseTable) {
-        for(int i = 0; i < parseTable.length; i++) {
-            for(int j = 0; j < parseTable[i].length; j++) {
-                if(parseTable[i][j].size() > 1) return false;
-            }
-        }
-
-        return true;
     }
 }

@@ -8,6 +8,7 @@ import parssist.lexer.exception.InvalidLexFormatException;
 import parssist.lexer.exception.InvalidTokenException;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
+import parssist.parser.top_down_analysis.nrdparser.generator.TabledrivenPredictiveGenerator;
 import parssist.parser.top_down_analysis.nrdparser.parser.TabledrivenPredictiveParser;
 import parssist.parser.top_down_analysis.nrdparser.parser.exception.NoLL1GrammarException;
 import parssist.parser.top_down_analysis.nrdparser.parser.exception.NonRecursivePredictiveParseException;
@@ -32,9 +33,13 @@ public class App {
         List<TokenType> tokenTypes = lexer.getTokenTypes();
 
         writer.write(CONFIG.getProperty("LEXER.TOKENTABLE.OUTPUT.DIR"), tokenTypes, tokens);
-        
+        /* 
         TabledrivenPredictiveParser parser1 = new TabledrivenPredictiveParser(createGrammar(), "$");
         System.out.println(parser1.parse("$"));
+        */
+
+        TabledrivenPredictiveGenerator generator = new TabledrivenPredictiveGenerator(createGrammar());
+        System.out.println(generator.generate("TestParser", "test.package"));
     }
 
 
