@@ -8,11 +8,11 @@ import parssist.lexer.exception.InvalidLexFormatException;
 import parssist.lexer.exception.InvalidTokenException;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
-import parssist.parser.top_down_analysis.nrdparser.TabledrivenPredictiveParser;
-import parssist.parser.top_down_analysis.nrdparser.exception.NoLL1GrammarException;
-import parssist.parser.top_down_analysis.nrdparser.exception.NonRecursivePredictiveParseException;
-import parssist.parser.top_down_analysis.nrdparser.util.Grammar;
-import parssist.parser.top_down_analysis.nrdparser.util.Production;
+import parssist.parser.top_down_analysis.nrdparser.parser.TabledrivenPredictiveParser;
+import parssist.parser.top_down_analysis.nrdparser.parser.exception.NoLL1GrammarException;
+import parssist.parser.top_down_analysis.nrdparser.parser.exception.NonRecursivePredictiveParseException;
+import parssist.parser.top_down_analysis.nrdparser.parser.util.Grammar;
+import parssist.parser.top_down_analysis.nrdparser.parser.util.Production;
 import parssist.util.Reader;
 import parssist.util.Writer;
 
@@ -34,8 +34,7 @@ public class App {
         writer.write(CONFIG.getProperty("LEXER.TOKENTABLE.OUTPUT.DIR"), tokenTypes, tokens);
         
         TabledrivenPredictiveParser parser1 = new TabledrivenPredictiveParser(createGrammar(), "$");
-        System.out.println("SOL: " + parser1.computeSystemAnalysis());
-        parser1.printParseTree();
+        System.out.println(parser1.parse("$"));
     }
 
 

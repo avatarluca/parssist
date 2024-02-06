@@ -1,4 +1,4 @@
-package parssist.parser.top_down_analysis.nrdparser.exception;
+package parssist.parser.top_down_analysis.nrdparser.parser.exception;
 
 
 /**

@@ -1,4 +1,4 @@
-package parssist.parser.top_down_analysis.nrdparser.util;
+package parssist.parser.top_down_analysis.nrdparser.parser.util;
 import java.util.*;
 
 import org.junit.jupiter.api.BeforeEach;

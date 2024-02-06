@@ -1,4 +1,4 @@
-package parssist.parser.top_down_analysis.nrdparser;
+package parssist.parser.top_down_analysis.nrdparser.parser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,13 +13,13 @@ import parssist.ParssistConfig;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
 import parssist.parser.Parser;
-import parssist.parser.top_down_analysis.nrdparser.exception.NoLL1GrammarException;
-import parssist.parser.top_down_analysis.nrdparser.exception.NonRecursivePredictiveParseException;
-import parssist.parser.top_down_analysis.nrdparser.util.Grammar;
-import parssist.parser.top_down_analysis.nrdparser.util.Production;
-import parssist.parser.top_down_analysis.nrdparser.util.Stack;
-import parssist.parser.top_down_analysis.nrdparser.util.tree.ParseTreeNode;
-import parssist.parser.top_down_analysis.nrdparser.util.tree.visitor.JsonTreeVisitor;
+import parssist.parser.top_down_analysis.nrdparser.parser.exception.NoLL1GrammarException;
+import parssist.parser.top_down_analysis.nrdparser.parser.exception.NonRecursivePredictiveParseException;
+import parssist.parser.top_down_analysis.nrdparser.parser.util.Grammar;
+import parssist.parser.top_down_analysis.nrdparser.parser.util.Production;
+import parssist.parser.top_down_analysis.nrdparser.parser.util.Stack;
+import parssist.parser.top_down_analysis.nrdparser.parser.util.tree.ParseTreeNode;
+import parssist.parser.top_down_analysis.nrdparser.parser.util.tree.visitor.JsonTreeVisitor;
 
 
 /**
@@ -56,6 +56,16 @@ public class TabledrivenPredictiveParser extends Parser {
         resetStack();
     }
 
+
+    @Override public ParseTreeNode parse(final String w) throws NonRecursivePredictiveParseException, NoLL1GrammarException {
+        setInputString(w);
+        resetStack();
+        computeSystemAnalysis();
+
+        return root;
+    }
+
+
     /**
      * Create a new non-recursive predictive parser with an empty input string.
      * @param grammar The grammar, which the parser is working.
@@ -87,6 +97,10 @@ public class TabledrivenPredictiveParser extends Parser {
 
     public ParseTreeNode getRoot() {
         return root;
+    }
+
+    public List<Production>[][] getParseTable() {
+        return parseTable;
     }
 
 

@@ -1,4 +1,4 @@
-package parssist.parser.top_down_analysis.nrdparser;
+package parssist.parser.top_down_analysis.nrdparser.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -12,10 +12,10 @@ import org.junit.jupiter.api.Test;
 
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
-import parssist.parser.top_down_analysis.nrdparser.exception.NoLL1GrammarException;
-import parssist.parser.top_down_analysis.nrdparser.exception.NonRecursivePredictiveParseException;
-import parssist.parser.top_down_analysis.nrdparser.util.Grammar;
-import parssist.parser.top_down_analysis.nrdparser.util.Production;
+import parssist.parser.top_down_analysis.nrdparser.parser.exception.NoLL1GrammarException;
+import parssist.parser.top_down_analysis.nrdparser.parser.exception.NonRecursivePredictiveParseException;
+import parssist.parser.top_down_analysis.nrdparser.parser.util.Grammar;
+import parssist.parser.top_down_analysis.nrdparser.parser.util.Production;
 
 
 /**
