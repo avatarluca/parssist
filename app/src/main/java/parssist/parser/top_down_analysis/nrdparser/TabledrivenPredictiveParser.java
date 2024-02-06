@@ -18,6 +18,8 @@ import parssist.parser.top_down_analysis.nrdparser.exception.NonRecursivePredict
 import parssist.parser.top_down_analysis.nrdparser.util.Grammar;
 import parssist.parser.top_down_analysis.nrdparser.util.Production;
 import parssist.parser.top_down_analysis.nrdparser.util.Stack;
+import parssist.parser.top_down_analysis.nrdparser.util.tree.ParseTreeNode;
+import parssist.parser.top_down_analysis.nrdparser.util.tree.visitor.JsonTreeVisitor;
 
 
 /**
@@ -30,10 +32,11 @@ public class TabledrivenPredictiveParser extends Parser {
 
     private final Token EMPTY_TOKEN = new Token(new TokenType(CONFIG.getProperty("LEXER.EMPTY_SYMBOL"), Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL);
     private final Grammar grammar;
-    private final Stack<Token> stack;
     private final List<Production>[][] parseTable;
 
+    private Stack<ParseTreeNode> stack;
     private String w$;
+    private ParseTreeNode root;
 
 
     /**
@@ -41,19 +44,24 @@ public class TabledrivenPredictiveParser extends Parser {
      * Also creates a new stack and pushes a Token with {@link TabledrivenPredictiveParser#EMPTY_SYMBOL}.
      * @param grammar The grammar, which the parser is working.
      * @param w The input string.
+     * @throws IllegalArgumentException If the grammar is not preprocessed.
      */
-    public TabledrivenPredictiveParser(final Grammar grammar, final String w) {
+    public TabledrivenPredictiveParser(final Grammar grammar, final String w) throws IllegalArgumentException {
         this.grammar = grammar;
-        this.w$ = w + Grammar.EMPTY_SYMBOL;
-
-        this.stack = new Stack<>();
-        this.stack.push(EMPTY_TOKEN);
-        this.stack.push(grammar.getStartsymbol());
 
         this.parseTable = createParseTable(grammar);
+        this.root = new ParseTreeNode(grammar.getStartsymbol());
+
+        setInputString(w);
+        resetStack();
     }
 
-    public TabledrivenPredictiveParser(final Grammar grammar) {
+    /**
+     * Create a new non-recursive predictive parser with an empty input string.
+     * @param grammar The grammar, which the parser is working.
+     * @throws IllegalArgumentException If the grammar is not preprocessed.
+     */
+    public TabledrivenPredictiveParser(final Grammar grammar) throws IllegalArgumentException {
         this(grammar, "");
     }  
 
@@ -77,6 +85,19 @@ public class TabledrivenPredictiveParser extends Parser {
         this.w$ = w + Grammar.EMPTY_SYMBOL;
     }
 
+    public ParseTreeNode getRoot() {
+        return root;
+    }
+
+
+    /**
+     * Reset the stack.
+     */
+    public void resetStack() {
+        this.stack = new Stack<>();
+        this.stack.push(new ParseTreeNode(EMPTY_TOKEN));
+        this.stack.push(root);
+    }
 
     /**
      * Print parse table.
@@ -92,6 +113,20 @@ public class TabledrivenPredictiveParser extends Parser {
             }
         }
     }
+
+    /**
+     * Print the tree as JSON.
+     * @throws NullPointerException If the root or its token are null.
+     */
+    public void printParseTree() throws NullPointerException {
+        Objects.requireNonNull(root);
+        Objects.requireNonNull(root.getToken());
+
+        final JsonTreeVisitor visitor = new JsonTreeVisitor();
+        root.accept(visitor);
+
+        System.out.println(visitor.getJson());
+    }
  
     /**
      * Compute the system analysis: Checks if a word is valid according to the grammar and in the language of the grammar.
@@ -102,48 +137,59 @@ public class TabledrivenPredictiveParser extends Parser {
     public boolean computeSystemAnalysis() throws NonRecursivePredictiveParseException, NoLL1GrammarException {
         if(!isLL1(parseTable)) throw new NoLL1GrammarException(CONFIG.getProperty("NONREC.PARSER.ERROR.NO_LL1_GRAMMAR"));
 
+        root.cleanChildren();
+
         int ip = 0; // first symbol of w$
-        
+        ParseTreeNode X = stack.peek(); // top of stack
+        ParseTreeNode a = new ParseTreeNode(getNextToken(ip)); // symbol of w$
+        ParseTreeNode cursor = root;
+
         do {
-            final Token X = stack.peek(); // top of stack
-            final Token a = getNextToken(ip); // symbol of w$
+            a = new ParseTreeNode(getNextToken(ip));
+            cursor = X;
+            
+            if(a.getToken() == null) throw new NonRecursivePredictiveParseException(CONFIG.getProperty("NONREC.PARSER.ERROR.INVALID_TOKEN") + " " + ip + " " + w$);
 
-            if(a == null) throw new NonRecursivePredictiveParseException(CONFIG.getProperty("NONREC.PARSER.ERROR.INVALID_TOKEN"));
+            if(a.getToken().tokenType().ignore() && ip < w$.length() - 1) { // ignore token (e.g. whitespace, empty symbol except the last one ...) 
+                ip += a.getToken().symbol().length();
+                continue;
+            }
 
-            if(grammar.isSymbolTerminal(X.symbol()) || X.symbol().equals(Grammar.EMPTY_SYMBOL)) {
+            if(grammar.isSymbolTerminal(X.getToken().symbol()) || X.getToken().symbol().equals(Grammar.EMPTY_SYMBOL)) {
                 if(X.equals(a)) {
                     stack.pop();
-                    ip += a.symbol().length();
-                } else throw new NonRecursivePredictiveParseException(CONFIG.getProperty("NONREC.PARSER.ERROR.EMPTY_SYMBOL") + stack);
+
+                    updateTree(cursor.getParent(), a);
+
+                    ip += a.getToken().symbol().length();
+                } else throw new NonRecursivePredictiveParseException(CONFIG.getProperty("NONREC.PARSER.ERROR.EMPTY_SYMBOL") + stack + " " + a.getToken().symbol() + " " + ip);
             } else { 
-                final Production production = parseTable[grammar.getVocabulary().indexOf(X)][grammar.getAlphabet().indexOf(a)].get(0);
+                try {
+                    final Production production = parseTable[grammar.getVocabulary().indexOf(X.getToken())][grammar.getAlphabet().indexOf(a.getToken())].get(0);
 
-                if(production == null) throw new NonRecursivePredictiveParseException(CONFIG.getProperty("NONREC.PARSER.ERROR.NO_PRODUCTION"));
+                    if(production == null) throw new NonRecursivePredictiveParseException(CONFIG.getProperty("NONREC.PARSER.ERROR.NO_PRODUCTION"));
 
-                stack.pop();
-                
-                System.out.println("ALT" + stack + " " + production);
-                for(int i = production.getRhs().size() - 1; i >= 0; i--) {
-                    if(!production.getRhs().get(i)[0].symbol().equals(Grammar.EMPTY_SYMBOL)) stack.push(production.getRhs().get(i)[0]);
+                    stack.pop();
+                    
+                    final Token[] rhs = production.getRhs().get(0); // first production because grammar preprocessing contract
+                    for(int i = rhs.length - 1; i >= 0; i--) {
+                        final Token tempToken = rhs[i];
+                        final ParseTreeNode tempNode = new ParseTreeNode(tempToken);
+
+                        updateTree(cursor, tempNode);
+
+                        stack.push(tempNode); 
+                    }
+                } catch (IndexOutOfBoundsException e) {
+                    throw new NonRecursivePredictiveParseException(CONFIG.getProperty("NONREC.PARSER.ERROR.NO_PRODUCTION"));
                 }
-                System.out.println("NEU" + stack + " " + production);
-
-                System.out.println(stack);
             }
-        } while(stack.peek() != EMPTY_TOKEN && stack.size() <= 1); // stack is empty
 
+            while(stack.peek().getToken().equals(EMPTY_TOKEN) && stack.size() > 1) updateTree(stack.peek().getParent(), stack.pop());
+        } while(!((X = stack.peek()).getToken().equals(EMPTY_TOKEN) && a.getToken().equals(EMPTY_TOKEN))); // stack and input buffer is empty
+        
         return true;
     }
-
-    /**
-     
-    TODO
-
-    public Node parse() {
-        return null;
-    }
-    
-    */
 
 
     /**
@@ -203,6 +249,16 @@ public class TabledrivenPredictiveParser extends Parser {
 
 
     /**
+     * Update the tree.
+     * @param root The root of the partition.
+     * @param node The token to add.
+     */
+    private void updateTree(final ParseTreeNode root, final ParseTreeNode node) {
+        root.addChild(node);
+        node.setParent(root);
+    }
+
+    /**
      * Checks if a production is already in a list.
      * @param productions The list of productions.
      * @param production The production to check.
@@ -231,13 +287,15 @@ public class TabledrivenPredictiveParser extends Parser {
 
     /**
      * Get the next token from the input buffer.
+     * Maybe sort by priority of the token types in the future.
      * @return The next token from the input buffer or null.
      */
     private @Nullable Token getNextToken(final int ip) {
         final String tempW$ = w$.substring(ip);
 
-        for(final TokenType tokenType : grammar.getTokentypes()) { // TODO: sort by priority
-            final Pattern pattern = Pattern.compile(CONFIG.getProperty("LEXER.REGEX.STARTSYMBOL") + tokenType.regex());
+        for(final TokenType tokenType : grammar.getTokentypes()) { 
+            if(tokenType.name().equals(CONFIG.getProperty("LEXER.NONTERMINAL"))) continue;
+            final Pattern pattern = Pattern.compile(CONFIG.getProperty("LEXER.REGEX.STARTSYMBOL") + "(" +  tokenType.regex() + ")");
             final Matcher matcher = pattern.matcher(tempW$);
 
             if(matcher.find()) {

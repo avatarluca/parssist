@@ -1,6 +1,8 @@
 package parssist.parser.top_down_analysis.nrdparser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +12,8 @@ import org.junit.jupiter.api.Test;
 
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
+import parssist.parser.top_down_analysis.nrdparser.exception.NoLL1GrammarException;
+import parssist.parser.top_down_analysis.nrdparser.exception.NonRecursivePredictiveParseException;
 import parssist.parser.top_down_analysis.nrdparser.util.Grammar;
 import parssist.parser.top_down_analysis.nrdparser.util.Production;
 
@@ -20,6 +24,7 @@ import parssist.parser.top_down_analysis.nrdparser.util.Production;
 public class TabledrivenPredictiveParserTest {
     private Grammar grammar1;
     private Grammar grammar2;
+    private Grammar grammar3;
 
 
     /**
@@ -31,7 +36,7 @@ public class TabledrivenPredictiveParserTest {
      * F -> (E) | id
      * (Example 4.17 from the {@link <a href="https://suif.stanford.edu/dragonbook/">Dragonbook</a>})
      */
-    public void setUpGrammar1() {
+    private void setUpGrammar1() {
         List<Production> productions = new ArrayList<>();
         List<Token> vocabulary = new ArrayList<>();
         List<Token> alphabet = new ArrayList<>();
@@ -164,8 +169,12 @@ public class TabledrivenPredictiveParserTest {
             new TokenType("NONTERMINAL", "", 0, false), "E"
         );
         
+        List tokentypes = new ArrayList<>();
+        tokentypes.add(new TokenType("TERMINAL", "\\(|\\)|\\*|\\+|id", 0, false));
+        tokentypes.add(new TokenType("NONTERMINAL", "E|E_|T|T_|F", 0, false));
+        tokentypes.add(new TokenType("EMPTY_SYMBOL", "\\$", 0, true));
 
-        grammar1 = new Grammar(new ArrayList<>(), vocabulary, alphabet, productions, startsymbol, true);
+        grammar1 = new Grammar(tokentypes, vocabulary, alphabet, productions, startsymbol, true);
     }
 
     /**
@@ -175,7 +184,7 @@ public class TabledrivenPredictiveParserTest {
      * E -> b
      * (Example 4.19 from the {@link <a href="https://suif.stanford.edu/dragonbook/">Dragonbook</a>})
      */
-    public void setUpGrammar2() {
+    private void setUpGrammar2() {
         List<Production> productions = new ArrayList<>();
         List<Token> vocabulary = new ArrayList<>();
         List<Token> alphabet = new ArrayList<>();
@@ -269,6 +278,93 @@ public class TabledrivenPredictiveParserTest {
         
 
         grammar2 = new Grammar(new ArrayList<>(), vocabulary, alphabet, productions, startsymbol, true);
+    }
+
+    /**
+     * Set up the grammar, by using the following grammar:
+     * S -> TS | $
+     * T -> (S) | $
+     * (LL(1) Grammar for the language of balanced parentheses)
+     */
+    private void setUpGrammar3() {
+        List<Production> productions = new ArrayList<>();
+        List<Token> vocabulary = new ArrayList<>();
+        List<Token> alphabet = new ArrayList<>();
+        List<Token[]> list1 = new ArrayList<>();
+        List<Token[]> list2 = new ArrayList<>();
+        List<Token[]> list3 = new ArrayList<>();
+
+
+        list1.add(new Token[] {
+            new Token(new TokenType("NONTERMINAL", "T", 0, false), "T"),  
+            new Token(new TokenType("NONTERMINAL", "S", 0, false), "S")
+        });
+        productions.add(
+            new Production(
+                new Token(
+                    new TokenType("NONTERMINAL", "S", 0, false), "S"
+                ), 
+                list1
+            )
+        );
+
+
+        list2.add(new Token[] {
+            new Token(new TokenType("EMPTY_SYMBOL", "\\$", 0, true), "$")
+        });
+        productions.add(
+            new Production(
+                new Token(
+                    new TokenType("NONTERMINAL", "S", 0, false), "S"
+                ), 
+                list2
+            )
+        );
+
+
+        list3.add(new Token[] {
+            new Token(new TokenType("TERMINAL", "(", 0, false), "("),  
+            new Token(new TokenType("NONTERMINAL", "S", 0, false), "S"),
+            new Token(new TokenType("TERMINAL", ")", 0, false), ")"),  
+        });
+        productions.add(
+            new Production(
+                new Token(
+                    new TokenType("NONTERMINAL", "T", 0, false), "T"
+                ), 
+                list3
+            )
+        );
+
+
+        vocabulary.add(new Token(
+            new TokenType("NONTERMINAL", "S", 0, false), "S"
+        ));
+        vocabulary.add(new Token(
+            new TokenType("NONTERMINAL", "T", 0, false), "T"
+        ));
+        
+        alphabet.add(new Token(
+            new TokenType("TERMINAL", "(", 0, false), "("
+        ));
+        alphabet.add(new Token(
+            new TokenType("TERMINAL", ")", 0, false), ")"
+        ));
+        alphabet.add(new Token(
+            new TokenType("EMPTY_SYMBOL", "\\$", 0, true), "$"
+        ));
+
+        Token startsymbol = new Token(
+            new TokenType("NONTERMINAL", "S", 0, false), "S"
+        );
+        
+        List tokentypes = new ArrayList<>();
+        tokentypes.add(new TokenType("TERMINAL", "\\(|\\)", 0, false));
+        tokentypes.add(new TokenType("NONTERMINAL", "S", 0, false));
+        tokentypes.add(new TokenType("EMPTY_SYMBOL", "\\$", 0, true));
+
+
+        grammar3 = new Grammar(tokentypes, vocabulary, alphabet, productions, startsymbol, true);
     }
 
 
@@ -437,5 +533,153 @@ public class TabledrivenPredictiveParserTest {
         assertEquals(parseTable[2][3].size(), 0);
         assertEquals(parseTable[2][4].size(), 0);
         assertEquals(parseTable[2][5].size(), 0);
+    }
+
+
+    /**
+     * Test the {@link TabledrivenPredictiveParser#createParseTable(Grammar)} method with {@link TabledrivenPredictiveParserTest#setUpGrammar3()}.
+     * @throws NonRecursivePredictiveParseException If there is an exception while parsing the input.
+     * @throws NoLL1GrammarException If the grammar is not LL(1). 
+     */
+    @Test
+    @DisplayName("Test with grammar 3")
+    public void testComputeSystemAnalysisGrammar3() throws NonRecursivePredictiveParseException, NoLL1GrammarException {
+        setUpGrammar3();
+
+        final TabledrivenPredictiveParser parser = new TabledrivenPredictiveParser(grammar3, "()");
+
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("(()())");
+        parser.resetStack();
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("");
+        parser.resetStack();
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("$");
+        parser.resetStack();
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("(()(()))");
+        parser.resetStack();
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("(()(()))()");
+        parser.resetStack();
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("(()(()))()()");
+        parser.resetStack();
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("(()(()))()()()");
+        parser.resetStack();
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("$$$$$$");
+        parser.resetStack();
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("(($$$$)(($$)))()()");
+        parser.resetStack();
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("((($$$$)(($$)))()())");
+        parser.resetStack();
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("((($$$$)(($$)))()()");
+        parser.resetStack();
+        assertThrows(NonRecursivePredictiveParseException.class, () -> parser.computeSystemAnalysis());
+
+        parser.setInputString("((($$$$)(($$)))()()))");
+        parser.resetStack();
+        assertThrows(NonRecursivePredictiveParseException.class, () -> parser.computeSystemAnalysis());
+
+        parser.setInputString("((($$$$)(($$)))(a)())");
+        parser.resetStack();
+        assertThrows(NonRecursivePredictiveParseException.class, () -> parser.computeSystemAnalysis());
+
+        parser.setInputString("())");
+        parser.resetStack();
+        assertThrows(NonRecursivePredictiveParseException.class, () -> parser.computeSystemAnalysis());
+    }
+
+
+    /**
+     * Test the {@link TabledrivenPredictiveParser#createParseTable(Grammar)} method with {@link TabledrivenPredictiveParserTest#setUpGrammar2()}.
+     * @throws NonRecursivePredictiveParseException If there is an exception while parsing the input.
+     * @throws NoLL1GrammarException If the grammar is not LL(1). 
+     */
+    @Test
+    @DisplayName("Test with grammar 2")
+    public void testComputeSystemAnalysisGrammar2() throws NonRecursivePredictiveParseException, NoLL1GrammarException {
+        setUpGrammar2();
+
+        final TabledrivenPredictiveParser parser = new TabledrivenPredictiveParser(grammar2, "ibta$");
+
+        assertThrows(NoLL1GrammarException.class, () -> parser.computeSystemAnalysis());
+    }
+
+
+    /**
+     * Test the {@link TabledrivenPredictiveParser#createParseTable(Grammar)} method with {@link TabledrivenPredictiveParserTest#setUpGrammar1()}.
+     * @throws NonRecursivePredictiveParseException If there is an exception while parsing the input.
+     * @throws NoLL1GrammarException If the grammar is not LL(1). 
+     */
+    @Test
+    @DisplayName("Test with grammar 1")
+    public void testComputeSystemAnalysisGrammar1() throws NonRecursivePredictiveParseException, NoLL1GrammarException {
+        setUpGrammar1();
+
+        final TabledrivenPredictiveParser parser = new TabledrivenPredictiveParser(grammar1, "id");
+
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("id+id");
+        parser.resetStack();
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("id+$id");
+        parser.resetStack();
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("id+id*id");
+        parser.resetStack();
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("id+id*id+id");
+        parser.resetStack();
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("id+id*id+id*id");
+        parser.resetStack();
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("id+id*id+id*id+id");
+        parser.resetStack();
+        assertTrue(parser.computeSystemAnalysis());
+
+        parser.setInputString("id+id*id+id*id+id*");
+        parser.resetStack();
+        assertThrows(NonRecursivePredictiveParseException.class, () -> parser.computeSystemAnalysis());
+
+        parser.setInputString("id++id");
+        parser.resetStack();
+        assertThrows(NonRecursivePredictiveParseException.class, () -> parser.computeSystemAnalysis());
+
+        parser.setInputString("+id+id");
+        parser.resetStack();
+        assertThrows(NonRecursivePredictiveParseException.class, () -> parser.computeSystemAnalysis());
+
+        parser.setInputString("*");
+        parser.resetStack();
+        assertThrows(NonRecursivePredictiveParseException.class, () -> parser.computeSystemAnalysis());
+
+        parser.setInputString("$+id+id");
+        parser.resetStack();
+        assertThrows(NonRecursivePredictiveParseException.class, () -> parser.computeSystemAnalysis());
     }
 }

@@ -23,6 +23,9 @@ dependencies {
 
     // This dependency is used by the application.
     implementation("com.google.guava:guava:32.1.1-jre")
+
+    // JSON parsing library
+    implementation("org.json:json:20171018")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
