@@ -345,10 +345,10 @@ public class TabledrivenPredictiveParserTest {
         ));
         
         alphabet.add(new Token(
-            new TokenType("TERMINAL", "(", 0, false), "("
+            new TokenType("TERMINAL", "\\(", 0, false), "("
         ));
         alphabet.add(new Token(
-            new TokenType("TERMINAL", ")", 0, false), ")"
+            new TokenType("TERMINAL", "\\)", 0, false), ")"
         ));
         alphabet.add(new Token(
             new TokenType("EMPTY_SYMBOL", "\\$", 0, true), "$"

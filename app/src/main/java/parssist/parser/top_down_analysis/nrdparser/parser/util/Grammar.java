@@ -196,7 +196,10 @@ public class Grammar {
     public boolean isSymbolTerminal(final String symbol) {
         return alphabet.stream()
                         .map(e -> e.symbol())
-                        .anyMatch(e -> e.equals(symbol));
+                        .anyMatch(e -> e.equals(symbol))
+            || alphabet.stream()
+                        .map(e -> e.tokenType().regex())
+                        .anyMatch(e -> symbol.matches(CONFIG.getProperty("LEXER.REGEX.STARTSYMBOL") + e + CONFIG.getProperty("LEXER.REGEX.ENDSYMBOL")));
     }
 
     /**
@@ -207,7 +210,10 @@ public class Grammar {
     public boolean isSymbolNonTerminal(final String symbol) {
         return vocabulary.stream()
                         .map(e -> e.symbol())
-                        .anyMatch(e -> e.equals(symbol));
+                        .anyMatch(e -> e.equals(symbol))
+            || vocabulary.stream()
+                        .map(e -> e.tokenType().regex())
+                        .anyMatch(e -> symbol.matches(CONFIG.getProperty("LEXER.REGEX.STARTSYMBOL") + e + CONFIG.getProperty("LEXER.REGEX.ENDSYMBOL")));
     }
 
     
