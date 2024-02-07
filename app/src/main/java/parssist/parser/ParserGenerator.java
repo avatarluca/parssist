@@ -10,6 +10,7 @@ abstract public class ParserGenerator {
      * @param parserName Name of the parser.
      * @param packageName Name of the package.
      * @return Sourcecode.
+     * @throws Exception If there is an error while generating the parser.
      */
-    abstract public String generate(final String parserName, final String packageName);
+    abstract public String generate(final String parserName, final String packageName) throws Exception;
 }

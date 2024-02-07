@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import parssist.ParssistConfig;
 import parssist.parser.ParserGenerator;
 import parssist.parser.top_down_analysis.nrdparser.parser.TabledrivenPredictiveParser;
+import parssist.parser.top_down_analysis.nrdparser.parser.exception.NoLL1GrammarException;
 import parssist.parser.top_down_analysis.nrdparser.parser.util.Grammar;
 import parssist.parser.top_down_analysis.nrdparser.parser.util.Production;
 
@@ -34,11 +35,13 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
     }
 
 
-    @Override public String generate(final String parserName, final String packageName) {        
+    @Override public String generate(final String parserName, final String packageName) throws NoLL1GrammarException {        
         final TabledrivenPredictiveParser parser = new TabledrivenPredictiveParser(grammar);
         
         String parserCode = loadTemplate();
         List<Production>[][] parseTable = parser.getParseTable();
+
+        if(parser.isLL1(parseTable)) throw new NoLL1GrammarException(CONFIG.getProperty("NONREC.PARSER.ERROR.NO_LL1_GRAMMAR"));
 
         parserCode = insertCode(parserCode, generateParseTableCode(parseTable), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.INIT.PARSETABLE"));
         parserCode = insertCode(parserCode, generateTokentypesCode(), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.INIT.TOKENTYPES"));
