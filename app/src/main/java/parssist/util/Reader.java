@@ -16,7 +16,9 @@ public class Reader {
      */
     public String read(final String path) throws IOException {
         final File file = new File(path);
-        
+
+        if(!file.exists()) throw new IOException(path);
+
         try(final FileReader reader = new FileReader(file)) {
             String code = "";  
             int character;

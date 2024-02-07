@@ -87,6 +87,24 @@ public class Grammar {
     }
 
 
+    @Override public String toString() {
+        final StringBuilder sb = new StringBuilder();
+
+        sb.append("V := {")
+        .append(vocabulary.stream().map(e -> e.symbol()).reduce((a, b) -> a + ", " + b).get())
+        .append("}\n");
+        sb.append("A := {")
+        .append(alphabet.stream().map(e -> e.symbol()).reduce((a, b) -> a + ", " + b).get())
+        .append("}\n");
+        sb.append("P := {\n ")
+        .append(productions.stream().map(e -> e.toString()).reduce((a, b) -> a + ",\n " + b).get())
+        .append("\n}\n");
+        sb.append("S := ").append(startsymbol.symbol()).append("\n");
+
+        return sb.toString();
+    }
+
+
     /**
      * FIRST(a) is the set of all terminal definitions with which a string derived from a can begin.
      * @param a The string (any sequence of grammatical symbols), which is used to get the first set.

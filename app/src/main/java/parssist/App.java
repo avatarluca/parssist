@@ -8,7 +8,9 @@ import parssist.lexer.exception.InvalidLexFormatException;
 import parssist.lexer.exception.InvalidTokenException;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
+import parssist.parser.top_down_analysis.nrdparser.generator.GrammarGenerator;
 import parssist.parser.top_down_analysis.nrdparser.generator.TabledrivenPredictiveGenerator;
+import parssist.parser.top_down_analysis.nrdparser.generator.exception.ParseException;
 import parssist.parser.top_down_analysis.nrdparser.parser.TabledrivenPredictiveParser;
 import parssist.parser.top_down_analysis.nrdparser.parser.exception.NoLL1GrammarException;
 import parssist.parser.top_down_analysis.nrdparser.parser.exception.NonRecursivePredictiveParseException;
@@ -22,24 +24,37 @@ public class App {
     private static final ParssistConfig CONFIG = ParssistConfig.getInstance();
 
 
-    public static void main(String[] args) throws IOException, InvalidLexFormatException, InvalidTokenException, NonRecursivePredictiveParseException, NoLL1GrammarException {
+    public static void main(String[] args) throws IOException, InvalidLexFormatException, InvalidTokenException, NonRecursivePredictiveParseException, NoLL1GrammarException, ParseException {
         final Reader reader = new Reader();
         final Writer writer = new Writer();
         final Lexer lexer = new Lexer();
 
+        /* 
         final String code = reader.read(CONFIG.getProperty("PARSER.INIT.INPUT.DIR"));
         lexer.setCode(code);
         List<Token> tokens = lexer.tokenize();
         List<TokenType> tokenTypes = lexer.getTokenTypes();
 
         writer.write(CONFIG.getProperty("LEXER.TOKENTABLE.OUTPUT.DIR"), tokenTypes, tokens);
-        /* 
+
         TabledrivenPredictiveParser parser1 = new TabledrivenPredictiveParser(createGrammar(), "$");
         System.out.println(parser1.parse("$"));
-        */
 
         TabledrivenPredictiveGenerator generator = new TabledrivenPredictiveGenerator(createGrammar());
         System.out.println(generator.generate("TestParser", "test.package"));
+        */
+        
+        System.out.println("Created: ");
+        System.out.println(createGrammar());
+
+        System.out.println("Generated: ");
+        final String lex = reader.read(CONFIG.getProperty("LEXER.INIT.INPUT.DIR"));
+        final String grammar = reader.read(CONFIG.getProperty("PARSER.INIT.INPUT.DIR"));        
+        final Lexer lGrammarGen = new Lexer();
+        lGrammarGen.parseTokens(lex);
+        GrammarGenerator generator = new GrammarGenerator(grammar, lGrammarGen.getTokenTypes(), true);
+        System.out.println(generator.generate());
+        
     }
 
 

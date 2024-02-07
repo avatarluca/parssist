@@ -13,4 +13,13 @@ public record TokenType(String name, String regex, int priority, boolean ignore)
 
         return false;
     }
+
+
+    /**
+     * Creating a token type with a given priority.
+     * @param priority Name of the token type.
+     */
+    public TokenType withPriority(int priority) {
+        return new TokenType(name(), regex(), priority, ignore());
+    }
 }

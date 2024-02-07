@@ -1,5 +1,4 @@
-%" ", "\t"
-# Hallo
-OPEN := "\("
-CLOSE := "\)"
-IF := "if"
+OPEN_PARENTHESIS := "\\("
+CLOSE_PARENTHESIS := "\\)"
+EMPTY_SYMBOL := "\\$"
+NONTERMINAL := "S|T"

@@ -57,6 +57,7 @@ public class Lexer {
         final List<Token> tokens = new ArrayList<>();
 
         int cursor = 0;
+
         while(!code.isEmpty()) {
             final Token token = match();
 
@@ -69,32 +70,13 @@ public class Lexer {
         return tokens;
     }
 
-
-    /**
-     * Initalizes the lexer by reading the lex file (alphabet), which is defined in {@link ParssistConfig}.
-     * @throws IOException If the file couldn't be read.
-     * @throws InvalidLexFormatException If the file has invalid syntax.
-     */
-    private final void init() throws IOException, InvalidLexFormatException {
-        parseTokens(readLex());
-    }
-
-    /**
-     * Reads the lex file.
-     * @return The filecontent.
-     * @throws IOException If the file couldn't be read.
-     */
-    private String readLex() throws IOException {
-        return reader.read(CONFIG.getProperty("LEXER.INIT.INPUT.DIR"));
-    }
-
     /**
      * Handcoded parser. In the future this could also be done by inventing a grammar and put it in the created parsergenerator.
      * Parses the tokens: [TOKENNAME] := "[REGEX]" and puts all tokens in {@link Lexer#tokentypes}
      * @param input The input string.
      * @throws InvalidLexFormatException If the file has invalid syntax.
      */
-    private void parseTokens(final String input) throws InvalidLexFormatException {
+    public void parseTokens(final String input) throws InvalidLexFormatException {
         final Pattern ignorePattern = Pattern.compile(CONFIG.getProperty("LEXER.INIT.INPUT.IGNORE"));
         final Pattern commentPattern = Pattern.compile(CONFIG.getProperty("LEXER.INIT.INPUT.COMMENT"));
         final Pattern tokenPattern = Pattern.compile(CONFIG.getProperty("LEXER.INIT.INPUT.TOKENMAP"));
@@ -104,7 +86,7 @@ public class Lexer {
         this.tokentypes = new ArrayList<>();
 
         int priority = 0;
-
+        
         for(String row : rows) {
             final Matcher ignoreMatcher = ignorePattern.matcher(row);
             if(ignoreMatcher.find()) {
@@ -135,9 +117,30 @@ public class Lexer {
             final String[] list = ignorable.split(",\\s*");
 
             for (String regex : list) {
-                tokentypes.add(new TokenType(CONFIG.getProperty("LEXER.INIT.INPUT.IGNORE.TOKENNAME"), regex.replace("\"", ""), priority, true));
+                tokentypes.add(new TokenType(CONFIG.getProperty("LEXER.INIT.INPUT.IGNORE.TOKENNAME"), regex.replace("\"", ""), 0, true));
             }
         }
+
+        this.tokentypes.sort((a, b) -> a.priority() - b.priority());
+    }
+
+
+    /**
+     * Initalizes the lexer by reading the lex file (alphabet), which is defined in {@link ParssistConfig}.
+     * @throws IOException If the file couldn't be read.
+     * @throws InvalidLexFormatException If the file has invalid syntax.
+     */
+    private final void init() throws IOException, InvalidLexFormatException {
+        parseTokens(readLex());
+    }
+
+    /**
+     * Reads the lex file.
+     * @return The filecontent.
+     * @throws IOException If the file couldn't be read.
+     */
+    private String readLex() throws IOException {
+        return reader.read(CONFIG.getProperty("LEXER.INIT.INPUT.DIR"));
     }
 
     /**

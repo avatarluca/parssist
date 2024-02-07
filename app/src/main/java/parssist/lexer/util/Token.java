@@ -13,4 +13,13 @@ public record Token(TokenType tokenType, String symbol) {
 
         return false;
     }
+
+
+    /**
+     * Creating a token with a given tokentype.
+     * @param tokenType Token type of the token.
+     */
+    public Token withTokenType(TokenType tokenType) {
+        return new Token(tokenType, symbol());
+    }
 }
