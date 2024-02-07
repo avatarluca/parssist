@@ -1,13 +1,20 @@
 {{package_name}};
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 /**
  * A non-recursive predictive parser.
  */
+@SuppressWarnings("unchecked")
 public final class {{parser_name}} {
     private static final String EMPTY_SYMBOL = "$";
+    private static final Token EMPTY_TOKEN = new Token(new TokenType("EMPTY_SYMBOL", "\\$", 0, false), EMPTY_SYMBOL);
 
-    private final List<Production>[][] parseTable = new List<Production>[{{parsetable_y_size}}][{{parsetable_x_size}}];
+    private final List<Production>[][] parseTable = new ArrayList[{{parsetable_y_size}}][{{parsetable_x_size}}];
     private final Stack<Node> stack = new Stack<>();
     private final List<TokenType> tokentypes = new ArrayList<>();
     private final List<Token> alphabet = new ArrayList<>();
@@ -34,7 +41,7 @@ public final class {{parser_name}} {
     public Node parse(final String w) throws ParseException {
         final String w$ = w + EMPTY_SYMBOL;
         final Node root = new Node(new Token(new TokenType("{{start_symbol_name}}", "{{start_symbol_regex}}", 0, false), "{{start_symbol_value}}"));
-        final Node empty = new Node(new Token(new TokenType("EMPTY_SYMBOL", "\\$", 0, false), "$"));
+        final Node empty = new Node(EMPTY_TOKEN);
         
         stack.clean();
         stack.push(empty);
@@ -62,7 +69,7 @@ public final class {{parser_name}} {
         Node cursor = root;
 
         do {
-            a = new Node(getNextToken(ip));
+            a = new Node(getNextToken(ip, w$));
             cursor = X;
             
             if(a.getToken() == null) throw new ParseException("Invalid Token found at position: " + ip + "\n\n" + w$);
@@ -79,7 +86,7 @@ public final class {{parser_name}} {
                     updateTree(cursor.getParent(), a);
 
                     ip += a.getToken().symbol().length();
-                } else throw new ParseException(stack);
+                } else throw new ParseException(stack.toString());
             } else { 
                 try {
                     final Production production = parseTable[vocabulary.indexOf(X.getToken())][alphabet.indexOf(a.getToken())].get(0);
@@ -110,7 +117,7 @@ public final class {{parser_name}} {
      * Eats the next token from the input buffer.
      * @return The next token from the input buffer or null.
      */
-    private @Nullable Token getNextToken(final int ip, final String w$) {
+    private Token getNextToken(final int ip, final String w$) {
         final String tempW$ = w$.substring(ip);
 
         for(final TokenType tokenType : tokentypes) { 
@@ -452,6 +459,19 @@ public final class {{parser_name}} {
 
 
     /**
+     * Exception for parsing errors.
+     */
+    public class ParseException extends Exception {
+        public ParseException(final String message) {
+            super(message);
+        }
+        public ParseException() {
+            super();
+        }
+    }
+
+
+    /**
      * Visitor interface.
      */
     public interface Visitor {
@@ -478,13 +498,11 @@ public final class {{parser_name}} {
      * Example visitor for {@link Node}.
      * It formats the parsetree to a json.
      */
+    /*
     private final class JsonTreeVisitor implements Visitor {
         private final JSONObject json;
 
 
-        /**
-        * Creates a new JSON visitor.
-        */
         public JsonTreeVisitor() {
             this.json = new JSONObject();
         }
@@ -509,4 +527,5 @@ public final class {{parser_name}} {
             this.json.put(node.getToken().symbol(), kids);
         }
     }
+    */
 }

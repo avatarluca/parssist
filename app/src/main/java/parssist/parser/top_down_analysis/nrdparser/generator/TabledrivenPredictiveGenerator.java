@@ -45,11 +45,11 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
         parserCode = insertCode(parserCode, generateAlphabetCode(), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.INIT.ALPHABET"));
         parserCode = insertCode(parserCode, generateVocabularyCode(), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.INIT.VOCABULARY"));
         parserCode = insertCode(parserCode, parserName, CONFIG.getProperty("NONREC.PARSER.TEMPLATE.CLASSNAME"));
-        parserCode = insertCode(parserCode, packageName, CONFIG.getProperty("NONREC.PARSER.TEMPLATE.PACKAGENAME"));
+        parserCode = insertCode(parserCode, packageName.isEmpty() ? packageName : "package " + packageName, CONFIG.getProperty("NONREC.PARSER.TEMPLATE.PACKAGENAME"));
         parserCode = insertCode(parserCode, "" + parseTable.length, CONFIG.getProperty("NONREC.PARSER.TEMPLATE.PARSETABLESIZEY"));
         parserCode = insertCode(parserCode, "" + parseTable[0].length, CONFIG.getProperty("NONREC.PARSER.TEMPLATE.PARSETABLESIZEX"));
         parserCode = insertCode(parserCode, grammar.getStartsymbol().tokenType().name(), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.STARTSYMBOLNAME"));
-        parserCode = insertCode(parserCode, grammar.getStartsymbol().tokenType().regex(), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.STARTSYMBOLREGEX"));
+        parserCode = insertCode(parserCode, decorateRegex(grammar.getStartsymbol().tokenType().regex()), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.STARTSYMBOLREGEX"));
         parserCode = insertCode(parserCode, grammar.getStartsymbol().symbol(), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.STARTSYMBOLVALUE"));
 
         return parserCode.toString();
@@ -66,6 +66,8 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
     private String generateParseTableCode(final List<Production>[][] parseTable) {
         final StringBuilder code = new StringBuilder();
 
+        int listnr = 0;
+
         for(int i = 0; i < parseTable.length; i++) {
             for(int j = 0; j < parseTable[i].length; j++) {
                 if(parseTable[i][j] != null) {
@@ -76,27 +78,18 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
                         .append("] = new ArrayList<>();\n");
 
                     for(Production p : parseTable[i][j]) {
-                        code.append("parseTable[")
-                            .append(i)
-                            .append("][")
-                            .append(j)
-                            .append("].add(new Production(new Token(new TokenType(\"")
-                            .append(p.getLhs().tokenType().name())
-                            .append("\", \"")
-                            .append(p.getLhs().tokenType().regex())
-                            .append("\", ")
-                            .append(p.getLhs().tokenType().priority())
-                            .append(", ")
-                            .append(p.getLhs().tokenType().ignore())
-                            .append("), \"")
-                            .append(p.getLhs().symbol())
-                            .append("\"), List.of(");
+                        code.append("List<Token[]> list")
+                            .append(listnr)
+                            .append(" = new ArrayList<>();\n")
+                            .append("list")
+                            .append(listnr)
+                            .append(".add(new Token[]{");
 
                         for(int k = 0; k < p.getRhs().get(0).length; k++) {
                             code.append("new Token(new TokenType(\"")
                                 .append(p.getRhs().get(0)[k].tokenType().name())
                                 .append("\", \"")
-                                .append(p.getRhs().get(0)[k].tokenType().regex())
+                                .append(decorateRegex(p.getRhs().get(0)[k].tokenType().regex()))
                                 .append("\", ")
                                 .append(p.getRhs().get(0)[k].tokenType().priority())
                                 .append(", ")
@@ -107,7 +100,26 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
                                 
                             if(k < p.getRhs().get(0).length - 1) code.append(", ");
                         }
-                        code.append(")));\n");
+
+                        code.append("});\n");
+
+                        code.append("parseTable[")
+                            .append(i)
+                            .append("][")
+                            .append(j)
+                            .append("].add(new Production(new Token(new TokenType(\"")
+                            .append(p.getLhs().tokenType().name())
+                            .append("\", \"")
+                            .append(decorateRegex(p.getLhs().tokenType().regex()))
+                            .append("\", ")
+                            .append(p.getLhs().tokenType().priority())
+                            .append(", ")
+                            .append(p.getLhs().tokenType().ignore())
+                            .append("), \"")
+                            .append(p.getLhs().symbol())
+                            .append("\"), list")
+                            .append(listnr++);
+                        code.append("));\n");
                     }
                 }
             }
@@ -127,7 +139,7 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
             code.append("tokentypes.add(new TokenType(\"")
                 .append(grammar.getTokentypes().get(i).name())
                 .append("\", \"")
-                .append(grammar.getTokentypes().get(i).regex())
+                .append(decorateRegex(grammar.getTokentypes().get(i).regex()))
                 .append("\", ")
                 .append(grammar.getTokentypes().get(i).priority())
                 .append(", ")
@@ -149,7 +161,7 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
             code.append("alphabet.add(new Token(new TokenType(\"")
                 .append(grammar.getAlphabet().get(i).tokenType().name())
                 .append("\", \"")
-                .append(grammar.getAlphabet().get(i).tokenType().regex())
+                .append(decorateRegex(grammar.getAlphabet().get(i).tokenType().regex()))
                 .append("\", ")
                 .append(grammar.getAlphabet().get(i).tokenType().priority())
                 .append(", ")
@@ -173,7 +185,7 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
             code.append("vocabulary.add(new Token(new TokenType(\"")
                 .append(grammar.getVocabulary().get(i).tokenType().name())
                 .append("\", \"")
-                .append(grammar.getVocabulary().get(i).tokenType().regex())
+                .append(decorateRegex(grammar.getVocabulary().get(i).tokenType().regex()))
                 .append("\", ")
                 .append(grammar.getVocabulary().get(i).tokenType().priority())
                 .append(", ")
@@ -186,7 +198,6 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
         return code.toString();
     }
 
-    
     /**
      * Loads the template txt file of a nrd parser.
      */
@@ -223,5 +234,14 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
      */
     private String insertCode(final String template, final String code, final String token) {
         return template.replace(CONFIG.getProperty("NONREC.PARSER.TEMPLATE.OPENTOKEN") + token + CONFIG.getProperty("NONREC.PARSER.TEMPLATE.CLOSETOKEN"), code);
+    }
+
+    /**
+     * Decorate regex with double backslashes.
+     * @param regex The regex.
+     * @return The decorated regex.
+     */
+    private String decorateRegex(final String regex) {
+        return regex.replace("\\", "\\\\");
     }
 }
