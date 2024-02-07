@@ -1,4 +1,5 @@
-OPEN_PARENTHESIS := "\\("
-CLOSE_PARENTHESIS := "\\)"
-EMPTY_SYMBOL := "\\$"
+%" ", "\t", "\n", "\s", "\r"
+OPEN_PARENTHESIS := "\("
+CLOSE_PARENTHESIS := "\)"
+EMPTY_SYMBOL := "\$"
 NONTERMINAL := "S|T"

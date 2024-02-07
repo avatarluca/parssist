@@ -137,7 +137,7 @@ public class GrammarGenerator {
         alphabet = new ArrayList<>();
         productions = new ArrayList<>();
 
-        while((currentToken = eat(tokenTypes)) != null && !grammar.isEmpty()) {
+        while(!grammar.isEmpty() && (currentToken = eat(tokenTypes)) != null) {
             if(currentToken.tokenType().ignore()) continue;
 
             if(currentToken.tokenType().name().equals(CONFIG.getProperty("GRAMMAR.TOKEN.NONTERMINAL"))) nonTerminalToken = currentToken;  
@@ -167,7 +167,6 @@ public class GrammarGenerator {
         }
     }
 
-
     /**
      * Parse a production.
      * @param nonterminal The nonterminal of the lhs.
@@ -177,10 +176,10 @@ public class GrammarGenerator {
      */
     private void parseProduction(final Token nonterminal, final Token rule, final int priority) throws ParseException {
         if(!rule.tokenType().name().equals(CONFIG.getProperty("GRAMMAR.TOKEN.PRODUCTION_RULE"))) throw new ParseException(CONFIG.getProperty("GRAMMAR.TOKEN.ERROR.PRODUCTION_RULE"));
-        System.out.println("rule: " + rule.symbol());
-
+        
         final List<Token> catchedTokens = new ArrayList<>();
-        final String ruleString = rule.symbol();
+        final String ruleString = rule.symbol().replaceAll(CONFIG.getProperty("GRAMMAR.TOKEN.PRODUCTIONSYMBOLS.REGEX"), "");
+        
         int ip = 0;
 
         while(ip < ruleString.length()) {
