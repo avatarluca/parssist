@@ -6,20 +6,95 @@
 
     <title>Parssist</title>
 
-    <link rel="stylesheet" href="css/styles.css">
+    <!-- CodeMirror Import -->
+    <link rel="stylesheet" href="libs/codemirror/codemirror.min.css">
+    <link rel="stylesheet" href="libs/codemirror/material.min.css">
+    <script src="libs/codemirror/codemirror.min.js"></script>
+    <script src="libs/codemirror/javascript.min.js"></script>
 
-    <script type="module" src="js/parssist/codeeditor/src/codemirror.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/parssist.css">
+
+    <script type="module" src="js/parssist/index.js"></script>
+
 </head>
 <body>
-    <section>
-        <textarea id="code" data-mode="grammar" name="input" cols="30" rows="10"></textarea>
-    </section>
-    <script src="js/parssist.js">
-        export const editor = CodeMirror.fromTextArea(document.getElementById("code"), {
-            mode: "parssist_grammar",
-            lineNumbers: true,
-            theme: "default" 
-        });
-    </script>
+    <header>
+        <h1>Parssist</h1>
+    </header>
+
+    <main>
+        <section id="editor" class="parssist-main">
+            <div class="navigation">
+                <div class="file-navigation">
+                    <button id="open-lexer">lexer.lex</button>
+                    <button id="open-grammar">grammar.gra</button>
+                </div>
+                <div class="run-navigation">
+                    <button id="open-settings"><img src="../img/settings_icon.png"></button>
+                    <button id="open-run"><img src="../img/play_icon.png"></button>
+                </div>
+            </div>
+            <textarea id="codeboard"></textarea>
+        </section>
+        <section id="settings" class="parssist-main">
+            <div class="settings-navigation">
+                <button id="close-settings"><img src="../img/code_icon.png"></button>
+            </div>
+            <div class="settings-content">
+                <div class="settings-content-algorithm">
+                    <h2>Parse Algorithm</h2>
+                    <p>Choose the algorithm, which the generated parser should use.</p>
+                    <form>
+                        <div>
+                            <input type="radio" id="algorithm-auto" name="parse-algorithm" value="auto">
+                            <label for="algorithm-auto">auto</label>
+                            <div class="tooltip">
+                                <img class="question-mark" id="help-algorithm-auto" src="../img/question_icon.png">
+                                <span class="tooltiptext">This setting allows the generator to decide for itself which algorithm is best / easiest for the grammar entered.</span>
+                            </div>
+                            <br>
+                        </div>
+                        <div>
+                            <input type="radio" id="algorithm-ll1" name="parse-algorithm" value="ll1">
+                            <label for="algorithm-ll1">LL(1)</label>
+                            <div class="tooltip">
+                                <img class="question-mark" id="help-algorithm-auto" src="../img/question_icon.png">
+                                <span class="tooltiptext">The generated parser can determine languages that can be defined with an LL(1) grammar. It is a deterministic pushdown automaton which uses a parse table and is therefore (optimized) non-recursive. It therefore applies a top-down syntax analysis.</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="settings-content-output">
+                <h2>Output</h2>
+                <h3>Format</h3>
+                <form>
+                    <input type="checkbox" id="output-parsetree" name="output-parsetree" value="parsetree">
+                    <label for="output-parsetree">Ask for an input word to create a parse tree</label><br>
+                </form>
+                <h3>Generated Code</h3>
+                <form>
+                    <lable>Select the output language:</lable>
+                    <select id="output-language" name="output-language">
+                        <option value="Java14">Java (> 14)</option>
+                    </select>
+                </form>
+            </div>  
+        </section>
+        <section id="output" class="parssist-main">
+            <h2>Output</h2>
+            <div id="outputboard"></div>
+        </section>
+    </main>
+
+    <div id="saveModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p>Do you want to save the lexer- and grammarcode as files?</p>
+            <button id="saveChanges">Save</button>
+            <button id="discardChanges">Discard</button>
+        </div>
+    </div>
 </body>
 </html>

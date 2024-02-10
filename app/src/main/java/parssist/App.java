@@ -2,6 +2,10 @@ package parssist;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.checkerframework.checker.units.qual.s;
 
 import parssist.lexer.Lexer;
 import parssist.lexer.exception.InvalidLexFormatException;
@@ -43,18 +47,68 @@ public class App {
         TabledrivenPredictiveGenerator generator = new TabledrivenPredictiveGenerator(createGrammar());
         System.out.println(generator.generate("TestParser", "test.package"));
         */
-        
-        System.out.println("Created: ");
-        System.out.println(createGrammar());
 
-        System.out.println("Generated: ");
         final String lex = reader.read(CONFIG.getProperty("LEXER.INIT.INPUT.DIR"));
         final String grammar = reader.read(CONFIG.getProperty("PARSER.INIT.INPUT.DIR"));        
         final Lexer lGrammarGen = new Lexer();
         lGrammarGen.parseTokens(lex);
         GrammarGenerator generator = new GrammarGenerator(grammar, lGrammarGen.getTokenTypes(), true);
-        System.out.println(generator.generate());
+        // System.out.println(generator.generate());   
+        // g.getAlphabet().forEach(e -> System.out.println(e.symbol()));
+        // TabledrivenPredictiveGenerator gen = new TabledrivenPredictiveGenerator(generator.generate());
+        // System.out.println(gen.generate("TestParser", "test.package"));
         
+        Grammar grammar1 = generator.generate();
+        Grammar grammar2 = createGrammar();
+
+      
+        /**
+         * System.out.println("Alphabet");
+        System.out.println("first");
+        grammar1.getAlphabet().forEach(e -> System.out.println(e));
+        System.out.println("second");
+        grammar2.getAlphabet().forEach(e -> System.out.println(e));
+        System.out.println("Vocabulary");
+        System.out.println("first");
+        grammar1.getVocabulary().forEach(e -> System.out.println(e));
+        System.out.println("second");
+        grammar2.getVocabulary().forEach(e -> System.out.println(e));
+        System.out.println("Productions");
+        System.out.println("first");
+        grammar1.getProductions().forEach(e -> System.out.println(e));
+        System.out.println("second");
+        grammar2.getProductions().forEach(e -> System.out.println(e));
+        System.out.println("TokenTypes");
+        System.out.println("first");
+        grammar1.getTokentypes().forEach(e -> System.out.println(e));
+        System.out.println("second");
+        grammar2.getTokentypes().forEach(e -> System.out.println(e));
+        
+        System.out.println("Productions details");
+        System.out.println("first");
+        for(Production production : grammar1.getProductions()) {
+            System.out.println(">" + production);
+            for(Token[] rhs : production.getRhs()) {
+                for(Token token : rhs) {
+                    System.out.println(token);
+                }
+            }
+        }
+        System.out.println("second");
+        for(Production production : grammar2.getProductions()) {
+            System.out.println(">" + production);
+            for(Token[] rhs : production.getRhs()) {
+                for(Token token : rhs) {
+                    System.out.println(token);
+                }
+            }
+        }
+         */
+
+
+        TabledrivenPredictiveGenerator gen = new TabledrivenPredictiveGenerator(grammar1);
+        gen.generate("TestParser", "test.package");
+        System.out.println(gen.generate("TestParser", "test.package"));
     }
 
 
@@ -75,8 +129,8 @@ public class App {
         
 
         list1.add(new Token[] {
-            new Token(new TokenType("NONTERMINAL", "T", 0, false), "T"),  
-            new Token(new TokenType("NONTERMINAL", "S", 0, false), "S")
+            new Token(new TokenType("NONTERMINAL", "T", 4, false), "T"),  
+            new Token(new TokenType("NONTERMINAL", "S", 3, false), "S")
         });
         productions.add(
             new Production(
@@ -89,7 +143,7 @@ public class App {
 
 
         list2.add(new Token[] {
-            new Token(new TokenType("EMPTY_SYMBOL", "\\$", 0, true), "$")
+            new Token(new TokenType("EMPTY_SYMBOL", "\\$", 2, false), "$")
         });
         productions.add(
             new Production(
@@ -102,9 +156,9 @@ public class App {
 
 
         list3.add(new Token[] {
-            new Token(new TokenType("TERMINAL", "(", 0, false), "("),  
-            new Token(new TokenType("NONTERMINAL", "S", 0, false), "S"),
-            new Token(new TokenType("TERMINAL", ")", 0, false), ")"),  
+            new Token(new TokenType("TERMINAL", "\\(", 0, false), "("),  
+            new Token(new TokenType("NONTERMINAL", "S", 3, false), "S"),
+            new Token(new TokenType("TERMINAL", "\\)", 1, false), ")"),  
         });
         productions.add(
             new Production(
@@ -120,17 +174,17 @@ public class App {
             new TokenType("NONTERMINAL", "S", 0, false), "S"
         ));
         vocabulary.add(new Token(
-            new TokenType("NONTERMINAL", "T", 0, false), "T"
+            new TokenType("NONTERMINAL", "T", 1, false), "T"
         ));
         
         alphabet.add(new Token(
-            new TokenType("TERMINAL", "(", 0, false), "("
+            new TokenType("TERMINAL", "\\(", 0, false), "("
         ));
         alphabet.add(new Token(
-            new TokenType("TERMINAL", ")", 0, false), ")"
+            new TokenType("TERMINAL", "\\)", 1, false), ")"
         ));
         alphabet.add(new Token(
-            new TokenType("EMPTY_SYMBOL", "\\$", 0, true), "$"
+            new TokenType("EMPTY_SYMBOL", "\\$", 2, false), "$"
         ));
 
         Token startsymbol = new Token(
@@ -138,9 +192,11 @@ public class App {
         );
         
         List tokentypes = new ArrayList<>();
-        tokentypes.add(new TokenType("TERMINAL", "\\(|\\)", 0, false));
+        tokentypes.add(new TokenType("TERMINAL", "\\(", 0, false));
+        tokentypes.add(new TokenType("TERMINAL", "\\)", 1, false));
         tokentypes.add(new TokenType("NONTERMINAL", "S", 0, false));
-        tokentypes.add(new TokenType("EMPTY_SYMBOL", "\\$", 0, true));
+        tokentypes.add(new TokenType("NONTERMINAL", "T", 1, false));
+        tokentypes.add(new TokenType("EMPTY_SYMBOL", "\\$", 2, true));
 
 
         return new Grammar(tokentypes, vocabulary, alphabet, productions, startsymbol, true);

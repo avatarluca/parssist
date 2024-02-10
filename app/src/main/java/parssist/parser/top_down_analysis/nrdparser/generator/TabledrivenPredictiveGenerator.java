@@ -35,13 +35,13 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
     }
 
 
-    @Override public String generate(final String parserName, final String packageName) throws NoLL1GrammarException {        
+    @Override public String generate(final String parserName, final String packageName) throws NoLL1GrammarException {
         final TabledrivenPredictiveParser parser = new TabledrivenPredictiveParser(grammar);
-        
-        String parserCode = loadTemplate();
-        List<Production>[][] parseTable = parser.getParseTable();
 
-        if(parser.isLL1(parseTable)) throw new NoLL1GrammarException(CONFIG.getProperty("NONREC.PARSER.ERROR.NO_LL1_GRAMMAR"));
+        String parserCode = loadTemplate();
+        final List<Production>[][] parseTable = parser.getParseTable();
+        parser.printParseTable();
+        if(!parser.isLL1(parseTable)) throw new NoLL1GrammarException(CONFIG.getProperty("NONREC.PARSER.ERROR.NO_LL1_GRAMMAR"));
 
         parserCode = insertCode(parserCode, generateParseTableCode(parseTable), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.INIT.PARSETABLE"));
         parserCode = insertCode(parserCode, generateTokentypesCode(), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.INIT.TOKENTYPES"));

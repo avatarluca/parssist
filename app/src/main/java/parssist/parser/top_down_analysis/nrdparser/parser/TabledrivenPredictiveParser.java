@@ -56,16 +56,6 @@ public class TabledrivenPredictiveParser extends Parser {
         resetStack();
     }
 
-
-    @Override public ParseTreeNode parse(final String w) throws NonRecursivePredictiveParseException, NoLL1GrammarException {
-        setInputString(w);
-        resetStack();
-        computeSystemAnalysis();
-
-        return root;
-    }
-
-
     /**
      * Create a new non-recursive predictive parser with an empty input string.
      * @param grammar The grammar, which the parser is working.
@@ -74,6 +64,15 @@ public class TabledrivenPredictiveParser extends Parser {
     public TabledrivenPredictiveParser(final Grammar grammar) throws IllegalArgumentException {
         this(grammar, "");
     }  
+
+
+    @Override public ParseTreeNode parse(final String w) throws NonRecursivePredictiveParseException, NoLL1GrammarException {
+        setInputString(w);
+        resetStack();
+        computeSystemAnalysis();
+
+        return root;
+    }
 
 
     /**
@@ -218,7 +217,7 @@ public class TabledrivenPredictiveParser extends Parser {
      */
     public boolean isLL1(final List<Production>[][] parseTable) {
         for(int i = 0; i < parseTable.length; i++) {
-            for(int j = 0; j < parseTable[i].length; j++) {
+            for(int j = 0; j < parseTable[i].length; j++) {;
                 if(parseTable[i][j].size() > 1) return false;
             }
         }

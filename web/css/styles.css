@@ -69,9 +69,10 @@ button {
 
 footer {
     position: fixed;
-    bottom: 10px;
+    bottom: 0px;
     width: 100%;
     text-align: center; 
+    margin: 0px;
 }
 
 footer p {

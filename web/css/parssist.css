@@ -1,7 +1,213 @@
 /*
-    GLOBAL
+    MAIN
 */
 
-* {
-    font-family: "stratum","Arial Narrow","Trebuchet MS",sans-serif;
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    height: 100%;
+    background-color: #f5f5f5;
+    margin: 20px;
+}
+
+#settings {
+    display: none;
+}
+
+.parssist-main {
+    flex: 1;
+    box-sizing: border-box;
+    margin: 20px;
+}
+
+
+
+
+
+
+/*
+    EDITOR
+*/
+
+.CodeMirror-scroll span {
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.cm-grammar-empty {
+    color: rgb(145, 69, 66); 
+    font-weight: bold;
+}
+.cm-grammar-comment {
+    color: rgb(79, 129, 79);
+}
+.cm-grammar-operator {
+    color: rgb(71, 103, 172);
+}
+.cm-grammar-non-terminal {
+    color: rgb(223, 215, 103);
+    font-weight: bold;
+}
+
+.cm-lexer-comment {
+    color: rgb(79, 129, 79);
+}
+.cm-lexer-regex {
+    color: rgb(196, 120, 110);
+}
+.cm-lexer-operator {
+    color: rgb(71, 103, 172);
+}
+.cm-lexer-token {
+    color: rgb(0, 145, 125);
+    font-weight: bold;
+}
+
+
+main section {
+    display: flex;
+    flex-direction: column;
+}
+.CodeMirror, .CodeMirror-scroll {
+    display: flex;
+    flex-grow: 1;
+}
+.navigation {
+    height: 40px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: #1b1b1b;
+    margin: 0px;
+}
+.file-navigation {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 0px;
+}
+.file-navigation button {
+    padding: 10px;
+    width: 150px;
+    border: none;
+    border-radius: 0px;
+    background-color: #313131;
+    margin: 0px;
+}
+.file-navigation button, .run-navigation div{
+    cursor: pointer;
+}
+.file-navigation button:hover {
+    background-color: #888888;
+}
+
+.run-navigation {
+    float: left;
+    display: flex;
+    flex-direction: row;
+    margin: 0px;
+    padding: 0px;
+}
+.run-navigation button, .settings-navigation button  {
+    width: fit-content;
+    margin: 5px;
+    padding: 0px;
+}
+.run-navigation button img, .settings-navigation button img {
+    width: 20px;
+    height: 20px;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+}
+.run-navigation button, .settings-navigation button {
+    background-color: transparent;
+}
+#open-settings img:hover, #open-run img:hover {
+    width: 22px;
+    height: 22px;
+}
+.settings-content-algorithm form, .settings-content-algorithm input, .settings-content-algorithm label, .settings-content-algorithm div {
+    display: flex;
+}
+.settings-content-algorithm form {
+    flex-direction: column;
+}
+.question-mark {
+    width: 20px;
+    height: 20px;
+    margin: 0px;
+    margin-left: 5px;
+    padding: 0px;
+    cursor: pointer;
+}
+.question-mark:hover {
+    opacity: 0.3;
+}
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: black;
+    opacity: 0.7;
+    color: #fff;
+    text-align: center;
+    border-radius: 4px;
+    padding: 10px;
+    position: absolute;
+    margin-left: 50px;
+}
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}
+
+
+
+
+
+
+
+/*
+    MODAL
+*/
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    text-align: center;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
 }

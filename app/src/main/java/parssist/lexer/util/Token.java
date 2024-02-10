@@ -22,4 +22,12 @@ public record Token(TokenType tokenType, String symbol) {
     public Token withTokenType(TokenType tokenType) {
         return new Token(tokenType, symbol());
     }
+
+    /**
+     * Creating a token with a given symbol.
+     * @param symbol Symbol of the token.
+     */
+    public Token withSymbol(String symbol) {
+        return new Token(tokenType(), symbol);
+    }
 }

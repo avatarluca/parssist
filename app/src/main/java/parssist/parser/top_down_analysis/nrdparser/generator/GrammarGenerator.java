@@ -3,6 +3,7 @@ package parssist.parser.top_down_analysis.nrdparser.generator;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -116,7 +117,8 @@ public class GrammarGenerator {
         final List<TokenType> tokenTypes = lexer.getTokenTypes();
 
         parseGrammar(tokens, tokenTypes);
-
+        renewTokenTypes(tokenTypes);
+        
         return new Grammar(tokenTypes, vocabulary, alphabet, productions, startsymbol, preproc);
     }
 
@@ -157,12 +159,18 @@ public class GrammarGenerator {
             startsymbol = productions.get(0).getLhs();
             
             for(final Production production : productions) {
-                vocabulary.add(production.getLhs());
-                alphabet.addAll(userTokenTypes.stream()
+                final Token lhs = production.getLhs();
+                vocabulary.add(lhs.withTokenType(lhs.tokenType().withRegex(lhs.symbol())));
+
+                List<Token> extractedAlphabet = userTokenTypes.stream()
                     .filter(e -> !e.name().equals(CONFIG.getProperty("GRAMMAR.TOKEN.NONTERMINAL")))
                     .map(e -> new Token(e, e.regex()))
-                    .toList()
-                );
+                    .toList();
+                
+                for(final Token token : extractedAlphabet) {
+                    final Token decoratedToken = token.withSymbol(token.symbol().replace("\\", ""));
+                    if(!alphabet.contains(decoratedToken) && !decoratedToken.tokenType().ignore()) alphabet.add(decoratedToken);
+                }
             }
         }
     }
@@ -187,8 +195,11 @@ public class GrammarGenerator {
 
             if(token == null) throw new ParseException(CONFIG.getProperty("GRAMMAR.TOKEN.ERROR.PRODUCTION_RULE"));
 
-            catchedTokens.add(token);
             ip += token.symbol().length();
+
+            if(token.tokenType().ignore()) continue;
+
+            catchedTokens.add(token);
         }
 
         final Token[] rhsTokens = catchedTokens.toArray(new Token[catchedTokens.size()]);
@@ -246,5 +257,34 @@ public class GrammarGenerator {
         }
 
         return null;
+    }
+
+    /**
+     * Renews the token types:
+     * - Removes the production rule and nonterminal token type.
+     * - Adds the alphabet token types.
+     * - Adds the vocabulary token types.
+     * - Sets empty symbol to ignore.
+     * - removes all ignoreables.
+     * @param tokenTypes The token types to renew.
+     */
+    private void renewTokenTypes(final List<TokenType> tokenTypes) {
+        tokenTypes.removeIf(e -> e.name().equals(CONFIG.getProperty("NONREC.PARSER.GRAMMARGENERATOR.PRODUCTION_RULE")));
+        tokenTypes.removeIf(e -> e.name().equals(CONFIG.getProperty("NONREC.PARSER.GRAMMARGENERATOR.NONTERMINAL")));
+        tokenTypes.addAll(alphabet.stream().map(e -> e.tokenType()).toList());
+        tokenTypes.addAll(vocabulary.stream().map(e -> e.tokenType()).toList());
+
+        final Iterator<TokenType> iter = tokenTypes.iterator();
+        TokenType emptySymbol = null;
+        while(iter.hasNext()) {
+            final TokenType tokenType = iter.next();
+            if(tokenType.name().equals(CONFIG.getProperty("NONREC.PARSER.GRAMMARGENERATOR.EMPTY_SYMBOL"))) {
+                emptySymbol = tokenType;
+                iter.remove();
+            } 
+            else if(tokenType.ignore()) iter.remove();
+        }
+
+        if(emptySymbol != null) tokenTypes.add(emptySymbol.withIgnore(true));
     }
 }
