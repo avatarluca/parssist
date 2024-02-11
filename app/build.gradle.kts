@@ -70,3 +70,13 @@ tasks.war {
 tasks.assemble {
     dependsOn(tasks.generateWasi,)
 }
+
+tasks.register("copyWasm", Copy::class) {
+    dependsOn("generateWasm")
+    from(tasks["generateWasm"].outputs)
+    into("../pub")
+}
+
+tasks.named("build") {
+    dependsOn("copyWasm")
+}
