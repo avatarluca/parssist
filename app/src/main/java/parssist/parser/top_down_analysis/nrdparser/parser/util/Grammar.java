@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
-import parssist.ParssistConfig;
+import parssist.Config;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
 
@@ -22,8 +22,6 @@ import parssist.lexer.util.TokenType;
  */
 public class Grammar {
     public static final String EMPTY_SYMBOL = "$";
-
-    private static final ParssistConfig CONFIG = ParssistConfig.getInstance();
 
     private final List<TokenType> tokentypes;
     private final List<Token> vocabulary;
@@ -114,7 +112,7 @@ public class Grammar {
     public Set<Token> first(final String a) throws IllegalArgumentException {
         Set<Token> result = new HashSet<>();
 
-        if(isSymbolTerminal(a)) return Set.of(new Token(new TokenType(CONFIG.getProperty("LEXER.TERMINAL"), a, 0, false), a));
+        if(isSymbolTerminal(a)) return Set.of(new Token(new TokenType(Config.LEXER_TERMINAL, a, 0, false), a));
         else if(isSymbolNonTerminal(a)) {
             for(Production production : productions) {
                 if(production.getLhs().symbol().equals(a)) {
@@ -123,7 +121,7 @@ public class Grammar {
                     for(Token[] rules : rhs) {
                         if(rules.length == 0) continue;
                         if(rules.length == 1 && rules[0].symbol().equals(Grammar.EMPTY_SYMBOL)) {
-                            result.add(new Token(new TokenType(CONFIG.getProperty("LEXER.EMPTY_SYMBOL"), Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL));
+                            result.add(new Token(new TokenType(Config.LEXER_EMPTY_SYMBOL, Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL));
                             continue;
                         }
                         
@@ -131,7 +129,7 @@ public class Grammar {
                     }
                 }
             }
-        } else throw new IllegalArgumentException(CONFIG.getProperty("GRAMMAR.ERROR.INVALID_SYMBOL") + a);
+        } else throw new IllegalArgumentException(Config.GRAMMAR_ERROR_INVALID_SYMBOL + a);
         
         return result;
     }
@@ -150,7 +148,7 @@ public class Grammar {
                 .thenComparing(e -> e.tokenType().name());
         Set<Token> result = new TreeSet<>(tokenComparator);
         
-        if(a.equals(startsymbol.symbol())) result.add(new Token(new TokenType(CONFIG.getProperty("LEXER.EMPTY_SYMBOL"), Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL));
+        if(a.equals(startsymbol.symbol())) result.add(new Token(new TokenType(Config.LEXER_EMPTY_SYMBOL, Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL));
 
         if(isSymbolNonTerminal(a)) {
             for(Production production : productions) {
@@ -176,14 +174,14 @@ public class Grammar {
                                     }
                                 }
                                 else if(isSymbolTerminal(rules[i + 1].symbol())) {
-                                    result.add(new Token(new TokenType(CONFIG.getProperty("LEXER.TERMINAL"), rules[i + 1].symbol(), 0, false), rules[i + 1].symbol()));
+                                    result.add(new Token(new TokenType(Config.LEXER_TERMINAL, rules[i + 1].symbol(), 0, false), rules[i + 1].symbol()));
                                 }
                             }
                         }
                     }
                 }
             }
-        } else throw new IllegalArgumentException(CONFIG.getProperty("GRAMMAR.ERROR.INVALID_SYMBOL") + a);
+        } else throw new IllegalArgumentException(Config.GRAMMAR_ERROR_INVALID_SYMBOL + a);
 
         return result;
     }
@@ -199,7 +197,7 @@ public class Grammar {
                         .anyMatch(e -> e.equals(symbol))
             || alphabet.stream()
                         .map(e -> e.tokenType().regex())
-                        .anyMatch(e -> symbol.matches(CONFIG.getProperty("LEXER.REGEX.STARTSYMBOL") + e + CONFIG.getProperty("LEXER.REGEX.ENDSYMBOL")));
+                        .anyMatch(e -> symbol.matches(Config.LEXER_REGEX_STARTSYMBOL + e + Config.LEXER_REGEX_ENDSYMBOL));
     }
 
     /**
@@ -213,7 +211,7 @@ public class Grammar {
                         .anyMatch(e -> e.equals(symbol))
             || vocabulary.stream()
                         .map(e -> e.tokenType().regex())
-                        .anyMatch(e -> symbol.matches(CONFIG.getProperty("LEXER.REGEX.STARTSYMBOL") + e + CONFIG.getProperty("LEXER.REGEX.ENDSYMBOL")));
+                        .anyMatch(e -> symbol.matches(Config.LEXER_REGEX_STARTSYMBOL + e + Config.LEXER_REGEX_ENDSYMBOL));
     }
 
     

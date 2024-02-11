@@ -5,18 +5,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
-import parssist.ParssistConfig;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
+import parssist.Config;
 
 
 /**
  * Writer class, used to write a file.
  */
 public class Writer {
-    private static final ParssistConfig CONFIG = ParssistConfig.getInstance();
-
-
     /**
      * Write the tokentable file.
      * @param path The filepath.
@@ -31,13 +28,13 @@ public class Writer {
 
         String content = "";
         
-        content += CONFIG.getProperty("LEXER.TOKENTABLE.TITLE1");
+        content += Config.LEXER_TOKENTABLE_TITLE1;
         for(int i = 0; i < tokentypes.size(); i++) {
             final TokenType currentTokenType = tokentypes.get(i);
             content += i + " " + currentTokenType + "\n";
         }
 
-        content += CONFIG.getProperty("LEXER.TOKENTABLE.TITLE2");
+        content += Config.LEXER_TOKENTABLE_TITLE2;
         for(int i = 0; i < tokens.size(); i++) {
             final Token currentToken = tokens.get(i);
             content += i + " " + currentToken + "\n";

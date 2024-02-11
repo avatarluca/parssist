@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
-import parssist.ParssistConfig;
+import parssist.Config;
 import parssist.parser.ParserGenerator;
 import parssist.parser.top_down_analysis.nrdparser.parser.TabledrivenPredictiveParser;
 import parssist.parser.top_down_analysis.nrdparser.parser.exception.NoLL1GrammarException;
@@ -18,8 +18,6 @@ import parssist.parser.top_down_analysis.nrdparser.parser.util.Production;
  * Class, which generates a table-driven predictive parser code.
  */
 public final class TabledrivenPredictiveGenerator extends ParserGenerator {
-    private static final ParssistConfig CONFIG = ParssistConfig.getInstance();
-
     private final Grammar grammar;
 
 
@@ -41,19 +39,19 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
         String parserCode = loadTemplate();
         final List<Production>[][] parseTable = parser.getParseTable();
         parser.printParseTable();
-        if(!parser.isLL1(parseTable)) throw new NoLL1GrammarException(CONFIG.getProperty("NONREC.PARSER.ERROR.NO_LL1_GRAMMAR"));
+        if(!parser.isLL1(parseTable)) throw new NoLL1GrammarException(Config.NONREC_PARSER_ERROR_NO_LL1_GRAMMAR);
 
-        parserCode = insertCode(parserCode, generateParseTableCode(parseTable), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.INIT.PARSETABLE"));
-        parserCode = insertCode(parserCode, generateTokentypesCode(), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.INIT.TOKENTYPES"));
-        parserCode = insertCode(parserCode, generateAlphabetCode(), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.INIT.ALPHABET"));
-        parserCode = insertCode(parserCode, generateVocabularyCode(), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.INIT.VOCABULARY"));
-        parserCode = insertCode(parserCode, parserName, CONFIG.getProperty("NONREC.PARSER.TEMPLATE.CLASSNAME"));
-        parserCode = insertCode(parserCode, packageName.isEmpty() ? packageName : "package " + packageName, CONFIG.getProperty("NONREC.PARSER.TEMPLATE.PACKAGENAME"));
-        parserCode = insertCode(parserCode, "" + parseTable.length, CONFIG.getProperty("NONREC.PARSER.TEMPLATE.PARSETABLESIZEY"));
-        parserCode = insertCode(parserCode, "" + parseTable[0].length, CONFIG.getProperty("NONREC.PARSER.TEMPLATE.PARSETABLESIZEX"));
-        parserCode = insertCode(parserCode, grammar.getStartsymbol().tokenType().name(), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.STARTSYMBOLNAME"));
-        parserCode = insertCode(parserCode, decorateRegex(grammar.getStartsymbol().tokenType().regex()), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.STARTSYMBOLREGEX"));
-        parserCode = insertCode(parserCode, grammar.getStartsymbol().symbol(), CONFIG.getProperty("NONREC.PARSER.TEMPLATE.STARTSYMBOLVALUE"));
+        parserCode = insertCode(parserCode, generateParseTableCode(parseTable), Config.NONREC_PARSER_TEMPLATE_INIT_PARSETABLE);
+        parserCode = insertCode(parserCode, generateTokentypesCode(), Config.NONREC_PARSER_TEMPLATE_INIT_TOKENTYPES);
+        parserCode = insertCode(parserCode, generateAlphabetCode(), Config.NONREC_PARSER_TEMPLATE_INIT_ALPHABET);
+        parserCode = insertCode(parserCode, generateVocabularyCode(), Config.NONREC_PARSER_TEMPLATE_INIT_VOCABULARY);
+        parserCode = insertCode(parserCode, parserName, Config.NONREC_PARSER_TEMPLATE_CLASSNAME);
+        parserCode = insertCode(parserCode, packageName.isEmpty() ? packageName : "package " + packageName, Config.NONREC_PARSER_TEMPLATE_PACKAGENAME);
+        parserCode = insertCode(parserCode, "" + parseTable.length, Config.NONREC_PARSER_TEMPLATE_PARSETABLESIZEY);
+        parserCode = insertCode(parserCode, "" + parseTable[0].length, Config.NONREC_PARSER_TEMPLATE_PARSETABLESIZEX);
+        parserCode = insertCode(parserCode, grammar.getStartsymbol().tokenType().name(), Config.NONREC_PARSER_TEMPLATE_STARTSYMBOLNAME);
+        parserCode = insertCode(parserCode, decorateRegex(grammar.getStartsymbol().tokenType().regex()), Config.NONREC_PARSER_TEMPLATE_STARTSYMBOLREGEX);
+        parserCode = insertCode(parserCode, grammar.getStartsymbol().symbol(), Config.NONREC_PARSER_TEMPLATE_STARTSYMBOLVALUE);
 
         return parserCode.toString();
     }
@@ -203,29 +201,11 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
 
     /**
      * Loads the template txt file of a nrd parser.
+     * Because of webassembly, the template is hardcoded in the config.
+     * @return The template.
      */
     private String loadTemplate() {
-        String template = "";
-
-        try (final InputStream is = getClass().getClassLoader().getResourceAsStream(
-                CONFIG.getProperty("NONREC.PARSER.TEMPLATE.PATH") +
-                CONFIG.getProperty("NONREC.PARSER.TEMPLATE.NAME") +
-                CONFIG.getProperty("NONREC.PARSER.TEMPLATE.EXTENSION"));
-             final InputStreamReader streamReader = new InputStreamReader(is, StandardCharsets.UTF_8);
-             final BufferedReader reader = new BufferedReader(streamReader)) {
-
-            final StringBuilder code = new StringBuilder();
-
-            String line;
-            while ((line = reader.readLine()) != null) code.append(line).append("\n");
-            
-            template = code.toString();
-        } catch (IOException | NullPointerException e) {
-            e.printStackTrace();
-            template = "";
-        }
-
-        return template;
+        return Config.TEMPLATE;
     }
 
     /**
@@ -236,7 +216,7 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
      * @return The edited template.
      */
     private String insertCode(final String template, final String code, final String token) {
-        return template.replace(CONFIG.getProperty("NONREC.PARSER.TEMPLATE.OPENTOKEN") + token + CONFIG.getProperty("NONREC.PARSER.TEMPLATE.CLOSETOKEN"), code);
+        return template.replace(Config.NONREC_PARSER_TEMPLATE_OPENTOKEN + token + Config.NONREC_PARSER_TEMPLATE_CLOSETOKEN, code);
     }
 
     /**

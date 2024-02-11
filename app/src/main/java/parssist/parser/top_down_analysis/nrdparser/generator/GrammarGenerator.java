@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
-import parssist.ParssistConfig;
+import parssist.Config;
 import parssist.lexer.Lexer;
 import parssist.lexer.exception.InvalidLexFormatException;
 import parssist.lexer.exception.InvalidTokenException;
@@ -25,8 +25,6 @@ import parssist.util.Reader;
  * Class to generate the {@link parssist.parser.top_down_analysis.nrdparser.parser.util.Grammar grammar}.
  */
 public class GrammarGenerator {
-    private static final ParssistConfig CONFIG = ParssistConfig.getInstance();
-
     private String lex;
     private String grammar;
     private List<TokenType> userTokenTypes;
@@ -40,29 +38,31 @@ public class GrammarGenerator {
 
     /**
      * Create a new grammar generator.
+     * Because of webassembly, the lexer can't read files. The lex file content has to be passed as a string.
      * @param grammar The grammar.
+     * @param lex The lex file content.
      * @param userTokenTypes The user defined token types.
      * @param preproc If the grammar should be preprocessed.
      * @throws IOException If the grammar lex couldn't be read.
      */
-    public GrammarGenerator(final String grammar, final List<TokenType> userTokenTypes, final boolean preproc) throws IOException {
+    public GrammarGenerator(final String grammar, final String lex, final List<TokenType> userTokenTypes, final boolean preproc) throws IOException {
         this.grammar = grammar;
         this.userTokenTypes = userTokenTypes;
         this.preproc = preproc;
-
-        final Reader reader = new Reader();
-        this.lex = reader.read(CONFIG.getProperty("NONREC.PARSER.GRAMMARGENERATOR.INIT.INPUT.DIR"));
+        this.lex = lex;
     }
 
     /**
      * Create a new grammar generator.
      * Preprocessing is enabled as default.
+     * Because of webassembly, the lexer can't read files. The lex file content has to be passed as a string.
      * @param grammar The grammar.
+     * @param lex The lex file content.
      * @param userTokenTypes The user defined token types.
      * @throws IOException If the grammar lex couldn't be read.
      */
-    public GrammarGenerator(final String grammar, final List<TokenType> userTokenTypes) throws IOException {
-        this(grammar, userTokenTypes, true);
+    public GrammarGenerator(final String grammar, final String lex, final List<TokenType> userTokenTypes) throws IOException {
+        this(grammar, lex, userTokenTypes, true);
     }
   
 
@@ -108,7 +108,7 @@ public class GrammarGenerator {
      * @throws ParseException If the grammar couldn't be parsed.
      */
     public Grammar generate() throws IOException, InvalidLexFormatException, InvalidTokenException, ParseException {
-        final Lexer lexer = new Lexer();
+        final Lexer lexer = new Lexer(lex);
 
         lexer.setCode(grammar);
         lexer.parseTokens(lex);
@@ -142,13 +142,13 @@ public class GrammarGenerator {
         while(!grammar.isEmpty() && (currentToken = eat(tokenTypes)) != null) {
             if(currentToken.tokenType().ignore()) continue;
 
-            if(currentToken.tokenType().name().equals(CONFIG.getProperty("GRAMMAR.TOKEN.NONTERMINAL"))) nonTerminalToken = currentToken;  
-            else if(currentToken.tokenType().name().equals(CONFIG.getProperty("GRAMMAR.TOKEN.PRODUCTION_RULE")) && nonTerminalToken != null) {
+            if(currentToken.tokenType().name().equals(Config.GRAMMAR_TOKEN_NONTERMINAL)) nonTerminalToken = currentToken;  
+            else if(currentToken.tokenType().name().equals(Config.GRAMMAR_TOKEN_PRODUCTION_RULE) && nonTerminalToken != null) {
                 do {
                     parseProduction(nonTerminalToken, currentToken, priority);
                 } while((currentToken = eat(tokenTypes)) != null 
                     && !grammar.isEmpty() 
-                    && currentToken.tokenType().name().equals(CONFIG.getProperty("GRAMMAR.TOKEN.PRODUCTION_RULE"))
+                    && currentToken.tokenType().name().equals(Config.GRAMMAR_TOKEN_PRODUCTION_RULE)
                 );
 
                 priority++;
@@ -163,7 +163,7 @@ public class GrammarGenerator {
                 vocabulary.add(lhs.withTokenType(lhs.tokenType().withRegex(lhs.symbol())));
 
                 List<Token> extractedAlphabet = userTokenTypes.stream()
-                    .filter(e -> !e.name().equals(CONFIG.getProperty("GRAMMAR.TOKEN.NONTERMINAL")))
+                    .filter(e -> !e.name().equals(Config.GRAMMAR_TOKEN_NONTERMINAL))
                     .map(e -> new Token(e, e.regex()))
                     .toList();
                 
@@ -183,17 +183,17 @@ public class GrammarGenerator {
      * @throws ParseException
      */
     private void parseProduction(final Token nonterminal, final Token rule, final int priority) throws ParseException {
-        if(!rule.tokenType().name().equals(CONFIG.getProperty("GRAMMAR.TOKEN.PRODUCTION_RULE"))) throw new ParseException(CONFIG.getProperty("GRAMMAR.TOKEN.ERROR.PRODUCTION_RULE"));
+        if(!rule.tokenType().name().equals(Config.GRAMMAR_TOKEN_PRODUCTION_RULE)) throw new ParseException(Config.GRAMMAR_TOKEN_ERROR_PRODUCTION_RULE);
         
         final List<Token> catchedTokens = new ArrayList<>();
-        final String ruleString = rule.symbol().replaceAll(CONFIG.getProperty("GRAMMAR.TOKEN.PRODUCTIONSYMBOLS.REGEX"), "");
+        final String ruleString = rule.symbol().replaceAll(Config.GRAMMAR_TOKEN_PRODUCTIONSYMBOLS_REGEX, "");
         
         int ip = 0;
 
         while(ip < ruleString.length()) {
             final Token token = getNextToken(ip, ruleString, userTokenTypes);
 
-            if(token == null) throw new ParseException(CONFIG.getProperty("GRAMMAR.TOKEN.ERROR.PRODUCTION_RULE"));
+            if(token == null) throw new ParseException(Config.GRAMMAR_TOKEN_ERROR_PRODUCTION_RULE);
 
             ip += token.symbol().length();
 
@@ -221,7 +221,7 @@ public class GrammarGenerator {
      */
     private @Nullable Token eat(final List<TokenType> tokenTypes) {
         for(final TokenType tokenType : tokenTypes) {
-            final Pattern pattern = Pattern.compile(CONFIG.getProperty("LEXER.REGEX.STARTSYMBOL") + tokenType.regex());
+            final Pattern pattern = Pattern.compile(Config.LEXER_REGEX_STARTSYMBOL + tokenType.regex());
             final Matcher matcher = pattern.matcher(this.grammar);
 
             if(matcher.find()) {
@@ -247,7 +247,7 @@ public class GrammarGenerator {
         final String tempW$ = w$.substring(ip);
 
         for(final TokenType tokenType : tokenTypes) { 
-            final Pattern pattern = Pattern.compile(CONFIG.getProperty("LEXER.REGEX.STARTSYMBOL") + "(" +  tokenType.regex() + ")");
+            final Pattern pattern = Pattern.compile(Config.LEXER_REGEX_STARTSYMBOL + "(" +  tokenType.regex() + ")");
             final Matcher matcher = pattern.matcher(tempW$);
 
             if(matcher.find()) {
@@ -269,8 +269,8 @@ public class GrammarGenerator {
      * @param tokenTypes The token types to renew.
      */
     private void renewTokenTypes(final List<TokenType> tokenTypes) {
-        tokenTypes.removeIf(e -> e.name().equals(CONFIG.getProperty("NONREC.PARSER.GRAMMARGENERATOR.PRODUCTION_RULE")));
-        tokenTypes.removeIf(e -> e.name().equals(CONFIG.getProperty("NONREC.PARSER.GRAMMARGENERATOR.NONTERMINAL")));
+        tokenTypes.removeIf(e -> e.name().equals(Config.NONREC_PARSER_GRAMMARGENERATOR_PRODUCTION_RULE));
+        tokenTypes.removeIf(e -> e.name().equals(Config.NONREC_PARSER_GRAMMARGENERATOR_NONTERMINAL));
         tokenTypes.addAll(alphabet.stream().map(e -> e.tokenType()).toList());
         tokenTypes.addAll(vocabulary.stream().map(e -> e.tokenType()).toList());
 
@@ -278,7 +278,7 @@ public class GrammarGenerator {
         TokenType emptySymbol = null;
         while(iter.hasNext()) {
             final TokenType tokenType = iter.next();
-            if(tokenType.name().equals(CONFIG.getProperty("NONREC.PARSER.GRAMMARGENERATOR.EMPTY_SYMBOL"))) {
+            if(tokenType.name().equals(Config.NONREC_PARSER_GRAMMARGENERATOR_EMPTY_SYMBOL)) {
                 emptySymbol = tokenType;
                 iter.remove();
             } 

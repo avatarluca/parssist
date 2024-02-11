@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
-import parssist.ParssistConfig;
+import parssist.Config;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
 import parssist.parser.Parser;
@@ -28,9 +28,7 @@ import parssist.parser.top_down_analysis.nrdparser.parser.util.tree.visitor.Json
  * The input buffer contains the string that is to be analyzed. the string is terminated with the end marker {@link Grammar#EMPTY_SYMBOL}.
  */
 public class TabledrivenPredictiveParser extends Parser {
-    private static final ParssistConfig CONFIG = ParssistConfig.getInstance();
-
-    private final Token EMPTY_TOKEN = new Token(new TokenType(CONFIG.getProperty("LEXER.EMPTY_SYMBOL"), Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL);
+    private final Token EMPTY_TOKEN = new Token(new TokenType(Config.LEXER_EMPTY_SYMBOL, Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL);
     private final Grammar grammar;
     private final List<Production>[][] parseTable;
 
@@ -148,7 +146,7 @@ public class TabledrivenPredictiveParser extends Parser {
      * @throws NoLL1GrammarException If the grammar is not LL(1).
      */
     public boolean computeSystemAnalysis() throws NonRecursivePredictiveParseException, NoLL1GrammarException {
-        if(!isLL1(parseTable)) throw new NoLL1GrammarException(CONFIG.getProperty("NONREC.PARSER.ERROR.NO_LL1_GRAMMAR"));
+        if(!isLL1(parseTable)) throw new NoLL1GrammarException(Config.NONREC_PARSER_ERROR_NO_LL1_GRAMMAR);
 
         root.cleanChildren();
 
@@ -161,7 +159,7 @@ public class TabledrivenPredictiveParser extends Parser {
             a = new ParseTreeNode(getNextToken(ip));
             cursor = X;
             
-            if(a.getToken() == null) throw new NonRecursivePredictiveParseException(CONFIG.getProperty("NONREC.PARSER.ERROR.INVALID_TOKEN") + " " + ip + " " + w$);
+            if(a.getToken() == null) throw new NonRecursivePredictiveParseException(Config.NONREC_PARSER_ERROR_INVALID_TOKEN + " " + ip + " " + w$);
 
             if(a.getToken().tokenType().ignore() && ip < w$.length() - 1) { // ignore token (e.g. whitespace, empty symbol except the last one ...) 
                 ip += a.getToken().symbol().length();
@@ -175,12 +173,12 @@ public class TabledrivenPredictiveParser extends Parser {
                     updateTree(cursor.getParent(), a);
 
                     ip += a.getToken().symbol().length();
-                } else throw new NonRecursivePredictiveParseException(CONFIG.getProperty("NONREC.PARSER.ERROR.EMPTY_SYMBOL") + stack + " " + a.getToken().symbol() + " " + ip);
+                } else throw new NonRecursivePredictiveParseException(Config.NONREC_PARSER_ERROR_EMPTY_SYMBOL + stack + " " + a.getToken().symbol() + " " + ip);
             } else { 
                 try {
                     final Production production = parseTable[grammar.getVocabulary().indexOf(X.getToken())][grammar.getAlphabet().indexOf(a.getToken())].get(0);
 
-                    if(production == null) throw new NonRecursivePredictiveParseException(CONFIG.getProperty("NONREC.PARSER.ERROR.NO_PRODUCTION"));
+                    if(production == null) throw new NonRecursivePredictiveParseException(Config.NONREC_PARSER_ERROR_NO_PRODUCTION);
 
                     stack.pop();
                     
@@ -194,7 +192,7 @@ public class TabledrivenPredictiveParser extends Parser {
                         stack.push(tempNode); 
                     }
                 } catch (IndexOutOfBoundsException e) {
-                    throw new NonRecursivePredictiveParseException(CONFIG.getProperty("NONREC.PARSER.ERROR.NO_PRODUCTION"));
+                    throw new NonRecursivePredictiveParseException(Config.NONREC_PARSER_ERROR_NO_PRODUCTION);
                 }
             }
 
@@ -236,7 +234,7 @@ public class TabledrivenPredictiveParser extends Parser {
      */
     @SuppressWarnings("unchecked") 
     List<Production>[][] createParseTable(final Grammar grammar) throws IllegalArgumentException {
-        if(!grammar.isPreproc()) throw new IllegalArgumentException(CONFIG.getProperty("NONREC.PARSER.ERROR.PREPROCESSED"));
+        if(!grammar.isPreproc()) throw new IllegalArgumentException(Config.NONREC_PARSER_ERROR_PREPROCESSED);
 
         final List<Production>[][] parseTable = new ArrayList[grammar.getVocabulary().size()][grammar.getAlphabet().size()];
       
@@ -253,10 +251,10 @@ public class TabledrivenPredictiveParser extends Parser {
             for(final Production production : grammar.getProductions()) {
                 if(production.getLhs().equals(nonTerminal)) { // Gets all productions of a certain non terminal
                     for(final Token terminal : first) {
-                        if(!production.hasEmptySymbol() && !terminal.equals(new Token(new TokenType(CONFIG.getProperty("LEXER.EMPTY_SYMBOL"), Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL))) {
+                        if(!production.hasEmptySymbol() && !terminal.equals(new Token(new TokenType(Config.LEXER_EMPTY_SYMBOL, Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL))) {
                             ArrayList<Production> productions = (ArrayList<Production>) parseTable[grammar.getVocabulary().indexOf(nonTerminal)][grammar.getAlphabet().indexOf(terminal)];
                             
-                            if(checkProductionNotInList(productions, production) && (production.getRhs().get(0)[0].tokenType().name().equals(CONFIG.getProperty("LEXER.TERMINAL")) ? terminal.equals(production.getRhs().get(0)[0]) : true)){
+                            if(checkProductionNotInList(productions, production) && (production.getRhs().get(0)[0].tokenType().name().equals(Config.LEXER_TERMINAL) ? terminal.equals(production.getRhs().get(0)[0]) : true)){
                                 productions.add(production);
                             }
                         } 
@@ -267,7 +265,7 @@ public class TabledrivenPredictiveParser extends Parser {
                             ArrayList<Production> productions = (ArrayList<Production>)parseTable[grammar.getVocabulary().indexOf(nonTerminal)][grammar.getAlphabet().indexOf(terminal)];
 
                             if(checkProductionNotInList(productions, production)) {
-                                Token[] tokens = new Token[]{new Token(new TokenType(CONFIG.getProperty("LEXER.EMPTY_SYMBOL"), Grammar.EMPTY_SYMBOL, 0, false),  Grammar.EMPTY_SYMBOL)};
+                                Token[] tokens = new Token[]{new Token(new TokenType(Config.LEXER_EMPTY_SYMBOL, Grammar.EMPTY_SYMBOL, 0, false),  Grammar.EMPTY_SYMBOL)};
                                 List<Token[]> rhs = new ArrayList<>();
                                 rhs.add(tokens);
                                 productions.add(new Production(production.getLhs(), rhs));
@@ -313,7 +311,7 @@ public class TabledrivenPredictiveParser extends Parser {
      */
     private boolean hasSetEmptySymbol(final Set<Token> set) {
         for(final Token token : set) {
-            if(token.equals(new Token(new TokenType(CONFIG.getProperty("LEXER.EMPTY_SYMBOL"), Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL))) return true;
+            if(token.equals(new Token(new TokenType(Config.LEXER_EMPTY_SYMBOL, Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL))) return true;
         }
 
         return false;
@@ -328,8 +326,8 @@ public class TabledrivenPredictiveParser extends Parser {
         final String tempW$ = w$.substring(ip);
 
         for(final TokenType tokenType : grammar.getTokentypes()) { 
-            if(tokenType.name().equals(CONFIG.getProperty("LEXER.NONTERMINAL"))) continue;
-            final Pattern pattern = Pattern.compile(CONFIG.getProperty("LEXER.REGEX.STARTSYMBOL") + "(" +  tokenType.regex() + ")");
+            if(tokenType.name().equals(Config.LEXER_NONTERMINAL)) continue;
+            final Pattern pattern = Pattern.compile(Config.LEXER_REGEX_STARTSYMBOL + "(" +  tokenType.regex() + ")");
             final Matcher matcher = pattern.matcher(tempW$);
 
             if(matcher.find()) {

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import parssist.ParssistConfig;
+import parssist.Config;
 import parssist.lexer.exception.InvalidLexFormatException;
 import parssist.lexer.exception.InvalidTokenException;
 import parssist.lexer.util.Token;
@@ -18,21 +18,19 @@ import parssist.util.Reader;
  * The lexer class, which tokenizes an input string.
  */
 public class Lexer {
-    private static final ParssistConfig CONFIG = ParssistConfig.getInstance();
-
-    private final Reader reader = new Reader();
-
     private List<TokenType> tokentypes;
     private String code = "";
 
 
     /**
      * Creates a new Lexer.
+     * Because of webassembly, the lexer can't read files. The lex file content has to be passed as a string.
+     * @param lex The lex file content.
      * @throws IOException If the file couldn't be read.
      * @throws InvalidLexFormatException If the file has invalid syntax.
      */
-    public Lexer() throws IOException, InvalidLexFormatException {
-        init();
+    public Lexer(final String lex) throws IOException, InvalidLexFormatException {
+        init(lex);
     }
 
 
@@ -61,7 +59,7 @@ public class Lexer {
         while(!code.isEmpty()) {
             final Token token = match();
 
-            if(token == null) throw new InvalidTokenException(CONFIG.getProperty("LEXER.ERROR.CURSOR") + cursor);
+            if(token == null) throw new InvalidTokenException(Config.LEXER_ERROR_CURSOR + cursor);
 
             tokens.add(token);
             cursor += token.symbol().length();
@@ -77,10 +75,10 @@ public class Lexer {
      * @throws InvalidLexFormatException If the file has invalid syntax.
      */
     public void parseTokens(final String input) throws InvalidLexFormatException {
-        final Pattern ignorePattern = Pattern.compile(CONFIG.getProperty("LEXER.INIT.INPUT.IGNORE"));
-        final Pattern commentPattern = Pattern.compile(CONFIG.getProperty("LEXER.INIT.INPUT.COMMENT"));
-        final Pattern tokenPattern = Pattern.compile(CONFIG.getProperty("LEXER.INIT.INPUT.TOKENMAP"));
-        final String[] rows = input.split(CONFIG.getProperty("LEXER.INIT.INPUT.ROWSPLIT"));
+        final Pattern ignorePattern = Pattern.compile(Config.LEXER_INIT_INPUT_IGNORE);
+        final Pattern commentPattern = Pattern.compile(Config.LEXER_INIT_INPUT_COMMENT);
+        final Pattern tokenPattern = Pattern.compile(Config.LEXER_INIT_INPUT_TOKENMAP);
+        final String[] rows = input.split(Config.LEXER_INIT_INPUT_ROWSPLIT);
         final List<String> ignorables = new ArrayList<>();
 
         this.tokentypes = new ArrayList<>();
@@ -117,7 +115,7 @@ public class Lexer {
             final String[] list = ignorable.split(",\\s*");
 
             for (String regex : list) {
-                tokentypes.add(new TokenType(CONFIG.getProperty("LEXER.INIT.INPUT.IGNORE.TOKENNAME"), regex.replace("\"", ""), 0, true));
+                tokentypes.add(new TokenType(Config.LEXER_INIT_INPUT_IGNORE_TOKENNAME, regex.replace("\"", ""), 0, true));
             }
         }
 
@@ -127,20 +125,12 @@ public class Lexer {
 
     /**
      * Initalizes the lexer by reading the lex file (alphabet), which is defined in {@link ParssistConfig}.
+     * @param lex The lex file content.
      * @throws IOException If the file couldn't be read.
      * @throws InvalidLexFormatException If the file has invalid syntax.
      */
-    private final void init() throws IOException, InvalidLexFormatException {
-        parseTokens(readLex());
-    }
-
-    /**
-     * Reads the lex file.
-     * @return The filecontent.
-     * @throws IOException If the file couldn't be read.
-     */
-    private String readLex() throws IOException {
-        return reader.read(CONFIG.getProperty("LEXER.INIT.INPUT.DIR"));
+    private final void init(final String lex) throws IOException, InvalidLexFormatException {
+        parseTokens(lex);
     }
 
     /**
@@ -149,7 +139,7 @@ public class Lexer {
      */
     private Token match() {
         for(final TokenType tokenType : tokentypes) {
-            final Pattern pattern = Pattern.compile(CONFIG.getProperty("LEXER.REGEX.STARTSYMBOL") + tokenType.regex());
+            final Pattern pattern = Pattern.compile(Config.LEXER_REGEX_STARTSYMBOL + tokenType.regex());
             final Matcher matcher = pattern.matcher(this.code);
 
             if(matcher.find()) {
