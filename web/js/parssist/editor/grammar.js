@@ -8,7 +8,7 @@ CodeMirror.defineMode("grammar", function () {
             return "grammar-comment";
         } else if(stream.match("$")) {
             return "grammar-empty";
-        } else if(stream.sol() && stream.match(/([A-Z]+ )/)) {
+        } else if(stream.sol() && stream.match(/([A-Z_]+ )/)) {
             return "grammar-non-terminal";
         } 
 

@@ -102,7 +102,7 @@ public class App {
         try {
             final Lexer lexer = new Lexer(lex);
             lexer.parseTokens(lex);
-            
+
             final GrammarGenerator generator = new GrammarGenerator(grammar, lexer.getTokenTypes(), true);
 
             final TabledrivenPredictiveParser tabledrivenPredictiveGenerator = new TabledrivenPredictiveParser(generator.generate(), input);

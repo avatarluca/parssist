@@ -15,7 +15,7 @@ function $rt_putStdoutCustom(msg, manager) {
         index = next + 1;
     }
     buffer += msg.substring(index);
-    console.log(code);
+
     if(manager) manager(code);
 }
 
@@ -194,6 +194,7 @@ const manageCodeGenerator = (code) => {
 }
 const manageParsetree = (code) => {
     try {
+        console.log("Parsetree: " + code);
         const json = JSON.parse(code);
 
         const chart = Tree(json, {

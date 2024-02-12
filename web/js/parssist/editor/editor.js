@@ -10,8 +10,8 @@ const discardChangesBtn = document.getElementById('discardChanges');
 const closeModalBtn = document.querySelector('.close');
 const grammarModeName = "grammar", lexerModeName = "lexer";
 
-let grammarCode = "S -> TS | $\nT -> (S)";
-let lexerCode = "%\" \", \"\\t\", \"\\n\", \"\\s\", \"\\r\"\nTERMINAL := \"\\(\"\nTERMINAL := \"\\)\"\nEMPTY_SYMBOL := \"\\$\"\nNONTERMINAL := \"S\"\nNONTERMINAL := \"T\"";
+let grammarCode = "";
+let lexerCode = "";
 let grammarCursor = {line: 0, ch: 0, sticky: null}, lexerCursor = {line: 0, ch: 0, sticky: null};
 let editorData = getInLocalStorage("editor");
 
@@ -116,6 +116,7 @@ document.getElementById("open-run").addEventListener("click", function() {
     run();
 });
 
+
 function run() {
     console.log("(!) Running...");
     console.log("> Lexer:\n" + lexerCode);
@@ -165,3 +166,22 @@ function run() {
 function askForInput() {
     return prompt("Please, provide the input to parse:");
 }
+
+export function changeGrammar(code) {
+    grammarCode = code;
+
+    if(editor.getOption('mode') === grammarModeName) {
+        editor.setValue(code);
+    }
+}
+export function changeLexer(code) {
+    lexerCode = code;
+
+    if(editor.getOption('mode') === lexerModeName) {
+        editor.setValue(code);
+    }
+}
+export function refreshMainEditor() {
+    editor.refresh();
+}
+export { grammarModeName, lexerModeName };

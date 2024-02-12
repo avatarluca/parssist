@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 
-    <title>Parssist</title>
+    <title>Parssist Editor</title>
+
+    <link rel="shortcut icon" type="image/png" href="img/logo.png">
 
     <!-- D3 import -->
     <script src="libs/d3/d3.v7.min.js"></script>
@@ -26,7 +28,10 @@
 </head>
 <body>
     <header>
-        <h1>Parssist</h1>
+        <div class="header-title">
+            <img class="header-title-element header-title-img" src="img/logo.svg">
+            <h1 class="header-title-element header-title-text">Parssist Editor</h1>
+        </div>
     </header>
 
     <main>
@@ -46,6 +51,7 @@
         <section id="settings" class="parssist-main">
             <div class="settings-navigation">
                 <button id="close-settings"><img src="../img/code_icon.png"></button>
+                <button id="open-samples"><img src="../img/sample_icon.png"></button>
             </div>
             <div class="settings-content">
                 <div class="settings-content-algorithm">
@@ -159,6 +165,79 @@
             <p>Do you want to save the lexer- and grammarcode as files?</p>
             <button id="saveChanges">Save</button>
             <button id="discardChanges">Discard</button>
+        </div>
+    </div>
+
+    <div id="samplesChooser" class="modal">
+        <div class="samples-modal">
+            <h1 class="samples-modal-title">Choose a sample</h1>
+            <p class="samples-modal-desc">To test parssist quickly you can use one of the following samples.</p>
+            <table class="sample-option" id="open-sample-1">
+                <tbody>
+                    <caption>
+                        Parenthesis checker
+                    </caption>
+                    <tr>
+                        <td>
+                            <textarea class="lex-sample" id="lex-sample-1"></textarea>
+                        </td>
+                        <td>
+                            <textarea class="grammar-sample" id="gra-sample-1"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p>
+                                An LL(1) grammar of balanced parentheses. 
+                            </p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <table class="sample-option" id="open-sample-2">
+                <tbody>
+                    <caption>
+                        If-Then-Else structures
+                    </caption>
+                    <tr>
+                        <td>
+                            <textarea class="lex-sample" id="lex-sample-2"></textarea>
+                        </td>
+                        <td>
+                            <textarea class="grammar-sample" id="gra-sample-2"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p>
+                                A non-LL(1) grammar to parse the if-then-else condition. This example comes from the dreaded <a href="https://suif.stanford.edu/dragonbook/">Dragonbook</a>.
+                            </p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <table class="sample-option" id="open-sample-3">
+                <tbody>
+                    <caption>
+                        Arithmetic expressions
+                    </caption>
+                    <tr>
+                        <td>
+                            <textarea class="lex-sample" id="lex-sample-3"></textarea>
+                        </td>
+                        <td>
+                            <textarea class="grammar-sample" id="gra-sample-3"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p>
+                                An Addition and multiplication recognizer. This example comes from the dreaded <a href="https://suif.stanford.edu/dragonbook/">Dragonbook</a>.
+                            </p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 

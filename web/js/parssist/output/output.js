@@ -1,9 +1,11 @@
+import { fetchSettings } from "../settings/settings.js";
+
 document.getElementById("open-download").addEventListener("click", () => {
     const java = new Blob([output.getValue()], { type: 'java' });
-    
+
     const link1 = document.createElement('a');
     link1.href = URL.createObjectURL(java);
-    link1.download = 'Parser.java';
+    link1.download = fetchSettings().name + '.java';
 
     document.body.appendChild(link1);
 

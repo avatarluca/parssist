@@ -143,8 +143,8 @@ public class GrammarGenerator {
             else if(currentToken.tokenType().name().equals(Config.GRAMMAR_TOKEN_PRODUCTION_RULE) && nonTerminalToken != null) {
                 do {
                     parseProduction(nonTerminalToken, currentToken, priority);
-                } while((currentToken = eat(tokenTypes)) != null 
-                    && !grammar.isEmpty() 
+                } while(!grammar.isEmpty() 
+                    && (currentToken = eat(tokenTypes)) != null 
                     && currentToken.tokenType().name().equals(Config.GRAMMAR_TOKEN_PRODUCTION_RULE)
                 );
 
@@ -177,7 +177,7 @@ public class GrammarGenerator {
      * @param nonterminal The nonterminal of the lhs.
      * @param rule The rule of the rhs.
      * @param priority The priority of the production.
-     * @throws ParseException
+     * @throws ParseException If the production couldn't be parsed.
      */
     private void parseProduction(final Token nonterminal, final Token rule, final int priority) throws ParseException {
         if(!rule.tokenType().name().equals(Config.GRAMMAR_TOKEN_PRODUCTION_RULE)) throw new ParseException(Config.GRAMMAR_TOKEN_ERROR_PRODUCTION_RULE);
@@ -242,6 +242,7 @@ public class GrammarGenerator {
      */
     private @Nullable Token getNextToken(final int ip, final String w$, final List<TokenType> tokenTypes) {
         final String tempW$ = w$.substring(ip);
+        Token tempToken = null;
 
         for(final TokenType tokenType : tokenTypes) { 
             final Pattern pattern = Pattern.compile(Config.LEXER_REGEX_STARTSYMBOL + "(" +  tokenType.regex() + ")");
@@ -249,11 +250,13 @@ public class GrammarGenerator {
 
             if(matcher.find()) {
                 final String value = matcher.group();
-                return new Token(tokenType, value);
+                final Token token = new Token(tokenType, value);
+
+                if((tempToken != null && token.symbol().length() > tempToken.symbol().length()) || tempToken == null) tempToken = token;
             }
         }
 
-        return null;
+        return tempToken;
     }
 
     /**

@@ -11,6 +11,21 @@ a {
     color: #9E358F;
 }
 
+body {
+    overflow-x: hidden;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+}
+li p {
+    margin: 0;
+}
+li {
+    margin: 20px;
+}
+
 
 
 
@@ -31,9 +46,53 @@ header {
 header h1 {
     font-size: 50px;
     letter-spacing: 3px;
+    color: #2c2c2c;
 }
 
+.header-title, .header-title-element {
+    display: flex;
+    flex-direction: row;
+}
 
+.header-title-text {
+    font-weight: bold;
+    margin: 20px;
+    font-size: 60px;
+}
+
+header {
+    margin-bottom: 0px;
+}
+
+.main-title{
+    margin: 0 auto;
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
+
+.main-title h1 {
+    font-size: 110px !important;
+    font-weight: bold;
+    margin: 0;
+}
+
+.main-title img {
+    margin: 20px
+}
+
+.header-title-desc {
+    font-size: 20px;
+    margin: 0px;
+}
+
+.get-started-section h2 {
+    color: #2c2c2c;
+}
+.get-started-section {
+    width: 80%;
+    margin: 0 auto;
+    margin-top: 50px;
+}
 
 
 
@@ -57,7 +116,26 @@ button {
     border-radius: 10px;
     width: 200px;
 }
-
+.try-it-section {
+    width: 100%;
+    background-color: #F5F5F5;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    padding: 50px;
+}
+.try-it-section p {
+    color: #2c2c2c;
+}
+.no-margin {
+    margin: 0;
+}
+.no-padding {
+    padding: 0;
+}
 
 
 
