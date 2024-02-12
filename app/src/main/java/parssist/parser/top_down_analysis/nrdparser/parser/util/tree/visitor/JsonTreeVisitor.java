@@ -7,7 +7,7 @@ import parssist.parser.top_down_analysis.nrdparser.parser.util.tree.ParseTreeNod
 
 
 /**
- * JSON Visitor implentation.
+ * JSON Visitor implementation.
  * @param <T> Type of the object to visit.
  */
 public class JsonTreeVisitor implements Visitor {
@@ -29,7 +29,7 @@ public class JsonTreeVisitor implements Visitor {
 
     @Override public void visit(ParseTreeNode node) {
         final JSONArray kids = new JSONArray();
-
+        System.out.println(node.getToken());
         if (node.getChildren().size() > 0) {
             for (ParseTreeNode child : node.getChildren()) {
                 final JsonTreeVisitor visitor = new JsonTreeVisitor();

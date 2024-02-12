@@ -18,7 +18,6 @@ import parssist.lexer.util.TokenType;
 import parssist.parser.top_down_analysis.nrdparser.generator.exception.ParseException;
 import parssist.parser.top_down_analysis.nrdparser.parser.util.Grammar;
 import parssist.parser.top_down_analysis.nrdparser.parser.util.Production;
-import parssist.util.Reader;
 
 
 /**
@@ -40,16 +39,15 @@ public class GrammarGenerator {
      * Create a new grammar generator.
      * Because of webassembly, the lexer can't read files. The lex file content has to be passed as a string.
      * @param grammar The grammar.
-     * @param lex The lex file content.
      * @param userTokenTypes The user defined token types.
      * @param preproc If the grammar should be preprocessed.
      * @throws IOException If the grammar lex couldn't be read.
      */
-    public GrammarGenerator(final String grammar, final String lex, final List<TokenType> userTokenTypes, final boolean preproc) throws IOException {
+    public GrammarGenerator(final String grammar, final List<TokenType> userTokenTypes, final boolean preproc) throws IOException {
         this.grammar = grammar;
         this.userTokenTypes = userTokenTypes;
         this.preproc = preproc;
-        this.lex = lex;
+        this.lex = Config.NONREC_PARSER_GRAMMARGENERATOR_INIT_INPUT_LEX;
     }
 
     /**
@@ -57,12 +55,11 @@ public class GrammarGenerator {
      * Preprocessing is enabled as default.
      * Because of webassembly, the lexer can't read files. The lex file content has to be passed as a string.
      * @param grammar The grammar.
-     * @param lex The lex file content.
      * @param userTokenTypes The user defined token types.
      * @throws IOException If the grammar lex couldn't be read.
      */
-    public GrammarGenerator(final String grammar, final String lex, final List<TokenType> userTokenTypes) throws IOException {
-        this(grammar, lex, userTokenTypes, true);
+    public GrammarGenerator(final String grammar, final List<TokenType> userTokenTypes) throws IOException {
+        this(grammar, userTokenTypes, true);
     }
   
 

@@ -1,3 +1,2 @@
 import './editor/editor.js';
-import './settings/settings.js';
-
+import './output/output.js';

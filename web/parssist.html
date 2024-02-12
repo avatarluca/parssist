@@ -3,20 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 
     <title>Parssist</title>
+
+    <!-- D3 import -->
+    <script src="libs/d3/d3.v7.min.js"></script>
 
     <!-- CodeMirror Import -->
     <link rel="stylesheet" href="libs/codemirror/codemirror.min.css">
     <link rel="stylesheet" href="libs/codemirror/material.min.css">
     <script src="libs/codemirror/codemirror.min.js"></script>
     <script src="libs/codemirror/javascript.min.js"></script>
+    <script src="libs/codemirror/clike.min.js"></script>
 
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/parssist.css">
 
+    <script type="text/javascript" charset="utf-8" src="js/parssist/output/parsetree.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/parssist/runner/java/wasm/app.wasm-runtime.js"></script>
     <script type="module" src="js/parssist/index.js"></script>
-
 </head>
 <body>
     <header>
@@ -45,9 +51,9 @@
                 <div class="settings-content-algorithm">
                     <h2>Parse Algorithm</h2>
                     <p>Choose the algorithm, which the generated parser should use.</p>
-                    <form>
+                    <form id="algorithm-form">
                         <div>
-                            <input type="radio" id="algorithm-auto" name="parse-algorithm" value="auto">
+                            <input checked type="radio" id="algorithm-auto" name="parse-algorithm" value="auto">
                             <label for="algorithm-auto">auto</label>
                             <div class="tooltip">
                                 <img class="question-mark" id="help-algorithm-auto" src="../img/question_icon.png">
@@ -70,8 +76,10 @@
                 <h2>Output</h2>
                 <h3>Format</h3>
                 <form>
-                    <input type="checkbox" id="output-parsetree" name="output-parsetree" value="parsetree">
-                    <label for="output-parsetree">Ask for an input word to create a parse tree</label><br>
+                    <input checked type="checkbox" id="output-parsetree" name="output-parsetree" value="parsetree">
+                    <label for="output-parsetree">Parsetree</label><br>
+                    <input checked type="checkbox" id="output-tokentable" name="output-tokentable" value="tokentable">
+                    <label for="output-tokentable">Tokentable</label><br>
                 </form>
                 <h3>Generated Code</h3>
                 <form>
@@ -80,11 +88,68 @@
                         <option value="Java14">Java (> 14)</option>
                     </select>
                 </form>
+                <br />
+                <form>
+                    <lable>Parser name:</lable>
+                    <input type="text" id="parser-name" name="parser-name" value="Parser">
+                    <br />
+                    <lable>Module name:</lable>
+                    <input type="text" id="module-name" name="module-name" value="parssist.Parser">
+                </form>
             </div>  
         </section>
         <section id="output" class="parssist-main">
-            <h2>Output</h2>
-            <div id="outputboard"></div>
+            <div id="output-banner">
+                <h1 id="output-banner-no-output">No Output</h1>
+            </div>
+            <div id="results">
+                <div id="parsetree">
+                    <div class="navigation parsetree-navigation-board">
+                        <div class="parsetree-navigation">
+                            <button id="open-download-json"><img src="../img/download_icon.png"></button>
+                        </div>
+                    </div>
+                    <p id="parsetree-title">Parse Tree</p>
+                    <div id="parsetree-board"></div>
+                </div>
+                <div id="tokentable">
+                    <table id="tokentable-lex">
+                        <tbody id="tokentable-lex-body">
+                            <caption>
+                                Tokentype lex list
+                            </caption>
+                            <tr class="table-head">
+                                <td>pos</td>
+                                <td>type</td>
+                                <td>regex</td>
+                                <td>priority</td>
+                                <td>ignore</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table id="tokentable-tokens">
+                        <tbody id="tokentable-tokens-body">
+                            <caption>
+                                Tokens with ignorables list
+                            </caption>
+                            <tr class="table-head">
+                                <td>pos</td>
+                                <td>type</td>
+                                <td>symbol</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="generator">
+                    <div class="navigation generator-navigation">
+                        <div class="parser-navigation">
+                            <button id="open-download"><img src="../img/download_icon.png"></button>
+                        </div>
+                        <p>Generated Parser</p>
+                    </div>
+                    <textarea id="outputboard"></textarea>
+                </div>
+            </div>
         </section>
     </main>
 
@@ -96,5 +161,16 @@
             <button id="discardChanges">Discard</button>
         </div>
     </div>
+
+    <script>
+        const output = CodeMirror.fromTextArea(document.getElementById('outputboard'), {
+            lineNumbers: true,
+            mode: "text/x-java",
+            theme: "material"
+        });
+    </script>
+    
+    <!-- Runners -->
+    <script src="js/parssist/runner/java/runner.js"></script>
 </body>
 </html>

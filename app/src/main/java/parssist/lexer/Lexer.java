@@ -11,7 +11,6 @@ import parssist.lexer.exception.InvalidLexFormatException;
 import parssist.lexer.exception.InvalidTokenException;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
-import parssist.util.Reader;
 
 
 /**

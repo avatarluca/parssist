@@ -60,6 +60,22 @@ public class Config {
     public static final String NONREC_PARSER_GRAMMARGENERATOR_PRODUCTION_RULE="PRODUCTION_RULE";
     public static final String NONREC_PARSER_GRAMMARGENERATOR_EMPTY_SYMBOL="EMPTY_SYMBOL";
     public static final String NONREC_PARSER_GRAMMARGENERATOR_NONTERMINAL="NONTERMINAL";
+    public static final String NONREC_PARSER_GRAMMARGENERATOR_INIT_INPUT_LEX="# ignorables\r\n" + //
+                "%\" \", \"\\t\", \"\\n" + //
+                "\", \"\\s\", \"\\r\"\r\n" + //
+                "# definitions (top-down priority)\r\n" + //
+                "# > ASSIGNMENTS\r\n" + //
+                "# VOCABULARY_ASSIGNMENT := \"V :=\"\r\n" + //
+                "# ALPHABET_ASSIGNMENT := \"A :=\"\r\n" + //
+                "# STARTSYMBOL_ASSIGNMENT := \"S :=\"\r\n" + //
+                "# Sets have a special syntax. For example: {'S', 'a'} is defined as %'S', 'a' (like the ignorables set)\r\n" + //
+                "# SET := \"%( *\\\"([a-zA-Z0-9_]*)\\\" *,)*( *\\\"([a-zA-Z0-9_]*)\\\" *)\"\r\n" + //
+                "# > RULES\r\n" + //
+                "NONTERMINAL := \"[a-zA-Z0-9_]+\"\r\n" + //
+                "# PRODUCTION_SYMBOL := \"\\->\"\r\n" + //
+                "# PRODUCTION_OR := \"\\|\"\r\n" + //
+                "PRODUCTION_RULE := \"((\\-> *)|(\\| *))([\\$a-zA-Z0-9\\(\\)\\{\\}\\[\\]\\^\\?\\:\\\\\\/\\!\\.;\\-_<>\\\"\\'\\`\\~=&\\*#@\\+ ]+)\"\r\n" + //
+                "EMPTY_SYMBOL := \"$\"";
 
 
     public static final String GRAMMAR_ERROR_INVALID_SYMBOL="String is not a symbol";

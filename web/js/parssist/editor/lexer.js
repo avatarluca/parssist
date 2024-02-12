@@ -8,7 +8,7 @@ CodeMirror.defineMode("lexer", function () {
         } else if(stream.sol() && stream.match("#")) {
             stream.skipToEnd();
             return "lexer-comment";
-        } else if(stream.sol() && stream.match(/([A-Z]+ )/)) {
+        } else if(stream.sol() && stream.match(/([A-Z_]+ )/)) {
             return "lexer-token";
         } 
 

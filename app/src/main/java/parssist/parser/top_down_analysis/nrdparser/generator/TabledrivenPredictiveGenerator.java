@@ -2,12 +2,11 @@ package parssist.parser.top_down_analysis.nrdparser.generator;
 
 import java.util.List;
 import java.util.Objects;
-
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.util.regex.PatternSyntaxException;
 
 import parssist.Config;
 import parssist.parser.ParserGenerator;
+import parssist.parser.top_down_analysis.nrdparser.generator.exception.GenerationException;
 import parssist.parser.top_down_analysis.nrdparser.parser.TabledrivenPredictiveParser;
 import parssist.parser.top_down_analysis.nrdparser.parser.exception.NoLL1GrammarException;
 import parssist.parser.top_down_analysis.nrdparser.parser.util.Grammar;
@@ -33,12 +32,19 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
     }
 
 
-    @Override public String generate(final String parserName, final String packageName) throws NoLL1GrammarException {
-        final TabledrivenPredictiveParser parser = new TabledrivenPredictiveParser(grammar);
+    @Override public String generate(final String parserName, final String packageName) throws NoLL1GrammarException, IndexOutOfBoundsException, GenerationException {
+        TabledrivenPredictiveParser parser = null;
+        try {
+            parser = new TabledrivenPredictiveParser(grammar);
+        } catch(StackOverflowError | PatternSyntaxException e) {
+            throw new GenerationException(e.getMessage());
+        }
+
+        if(parser == null) return "";
 
         String parserCode = loadTemplate();
         final List<Production>[][] parseTable = parser.getParseTable();
-        parser.printParseTable();
+
         if(!parser.isLL1(parseTable)) throw new NoLL1GrammarException(Config.NONREC_PARSER_ERROR_NO_LL1_GRAMMAR);
 
         parserCode = insertCode(parserCode, generateParseTableCode(parseTable), Config.NONREC_PARSER_TEMPLATE_INIT_PARSETABLE);

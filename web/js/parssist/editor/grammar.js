@@ -6,7 +6,7 @@ CodeMirror.defineMode("grammar", function () {
         } else if(stream.sol() && stream.match("#")) {
             stream.skipToEnd();
             return "grammar-comment";
-        } else if(stream.match("eps")) {
+        } else if(stream.match("$")) {
             return "grammar-empty";
         } else if(stream.sol() && stream.match(/([A-Z]+ )/)) {
             return "grammar-non-terminal";

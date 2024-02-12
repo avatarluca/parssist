@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import javax.annotation.Nullable;
 
@@ -19,7 +20,7 @@ import parssist.parser.top_down_analysis.nrdparser.parser.util.Grammar;
 import parssist.parser.top_down_analysis.nrdparser.parser.util.Production;
 import parssist.parser.top_down_analysis.nrdparser.parser.util.Stack;
 import parssist.parser.top_down_analysis.nrdparser.parser.util.tree.ParseTreeNode;
-import parssist.parser.top_down_analysis.nrdparser.parser.util.tree.visitor.JsonTreeVisitor;
+import parssist.parser.top_down_analysis.nrdparser.parser.util.tree.visitor.JsonLikeTreeVisitor;
 
 
 /**
@@ -43,8 +44,11 @@ public class TabledrivenPredictiveParser extends Parser {
      * @param grammar The grammar, which the parser is working.
      * @param w The input string.
      * @throws IllegalArgumentException If the grammar is not preprocessed.
+     * @throws IndexOutOfBoundsException If the index is out of bounds.
+     * @throws PatternSyntaxException If there was a stack overflow exception during compilation.
+     * @throws StackOverflowError If there was a stack overflow exception.
      */
-    public TabledrivenPredictiveParser(final Grammar grammar, final String w) throws IllegalArgumentException {
+    public TabledrivenPredictiveParser(final Grammar grammar, final String w) throws IllegalArgumentException, IndexOutOfBoundsException, PatternSyntaxException, StackOverflowError {
         this.grammar = grammar;
 
         this.parseTable = createParseTable(grammar);
@@ -58,13 +62,16 @@ public class TabledrivenPredictiveParser extends Parser {
      * Create a new non-recursive predictive parser with an empty input string.
      * @param grammar The grammar, which the parser is working.
      * @throws IllegalArgumentException If the grammar is not preprocessed.
+     * @throws IndexOutOfBoundsException If the index is out of bounds.
+     * @throws PatternSyntaxException If there was a stack overflow exception during compilation.
+     * @throws StackOverflowError If there was a stack overflow exception.
      */
-    public TabledrivenPredictiveParser(final Grammar grammar) throws IllegalArgumentException {
+    public TabledrivenPredictiveParser(final Grammar grammar) throws IllegalArgumentException, IndexOutOfBoundsException, PatternSyntaxException, StackOverflowError {
         this(grammar, "");
     }  
 
 
-    @Override public ParseTreeNode parse(final String w) throws NonRecursivePredictiveParseException, NoLL1GrammarException {
+    @Override public ParseTreeNode parse(final String w) throws NonRecursivePredictiveParseException, NoLL1GrammarException, IndexOutOfBoundsException {
         setInputString(w);
         resetStack();
         computeSystemAnalysis();
@@ -127,13 +134,15 @@ public class TabledrivenPredictiveParser extends Parser {
 
     /**
      * Print the tree as JSON.
+     * Because of webassembly, the tree can't be org.json.
+     * So it uses a custom implementation of a JSON like object.
      * @throws NullPointerException If the root or its token are null.
      */
     public void printParseTree() throws NullPointerException {
         Objects.requireNonNull(root);
         Objects.requireNonNull(root.getToken());
 
-        final JsonTreeVisitor visitor = new JsonTreeVisitor();
+        final JsonLikeTreeVisitor visitor = new JsonLikeTreeVisitor();
         root.accept(visitor);
 
         System.out.println(visitor.getJson());
@@ -144,8 +153,9 @@ public class TabledrivenPredictiveParser extends Parser {
      * @return True if the input string is valid, false otherwise.
      * @throws NonRecursivePredictiveParseException If there is an exception while parsing the input.
      * @throws NoLL1GrammarException If the grammar is not LL(1).
+     * @throws IndexOutOfBoundsException If the index is out of bounds.
      */
-    public boolean computeSystemAnalysis() throws NonRecursivePredictiveParseException, NoLL1GrammarException {
+    public boolean computeSystemAnalysis() throws NonRecursivePredictiveParseException, NoLL1GrammarException, IndexOutOfBoundsException {
         if(!isLL1(parseTable)) throw new NoLL1GrammarException(Config.NONREC_PARSER_ERROR_NO_LL1_GRAMMAR);
 
         root.cleanChildren();
@@ -231,9 +241,12 @@ public class TabledrivenPredictiveParser extends Parser {
      * @param grammar The grammar.
      * @return The parse table.
      * @throws IllegalArgumentException If the grammar is not preprocessed.
+     * @throws IndexOutOfBoundsException If the index is out of bounds.
+     * @throws PatternSyntaxException If there was a stack overflow exception during compilation.
+     * @throws StackOverflowError If there was a stack overflow exception.
      */
     @SuppressWarnings("unchecked") 
-    List<Production>[][] createParseTable(final Grammar grammar) throws IllegalArgumentException {
+    List<Production>[][] createParseTable(final Grammar grammar) throws IllegalArgumentException, IndexOutOfBoundsException, PatternSyntaxException, StackOverflowError {
         if(!grammar.isPreproc()) throw new IllegalArgumentException(Config.NONREC_PARSER_ERROR_PREPROCESSED);
 
         final List<Production>[][] parseTable = new ArrayList[grammar.getVocabulary().size()][grammar.getAlphabet().size()];

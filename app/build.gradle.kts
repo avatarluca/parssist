@@ -74,7 +74,7 @@ tasks.assemble {
 tasks.register("copyWasm", Copy::class) {
     dependsOn("generateWasm")
     from(tasks["generateWasm"].outputs)
-    into("../pub")
+    into("../web/js/parssist/runner/java/wasm")
 }
 
 tasks.named("build") {
