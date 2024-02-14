@@ -18,39 +18,43 @@ GRADLE_TASK="run"
 while [[ $# -gt 0 ]]; do 
     case "$1" in
         -g|--grammar)
-            INPUT_GRAMMAR="$2"
-            shift 2
+            INPUT_GRAMMAR="../../$2"
             ;;
         -l|--lexer)
-            INPUT_LEXER="$2"
-            shift 2
+            INPUT_LEXER="../../$2"
             ;;
         -lang|--language)
             OUTPUT_LANGUAGE="$2"
-            shift 2
             ;;
         -a|--algorithm)
             ALGORITHM="$2"
-            shift 2
             ;;
         -n|--name)
             NAME="$2"
-            shift 2
             ;;
         -m|--module)
             MODULE="$2"
-            shift 2
             ;;
         -mode|--mode)
             MODE="$2"
-            shift 2
+            ;;
+        -pa|--print-algorithms)
+            echo "Possible languages:"
+            echo "  1. auto (default)"
+            echo "  2. ll1"
+            exit 1
+            ;;
+        -pl|--print-languages)
+            echo "Possible languages:"
+            echo "  1. java (default)"
+            exit 1
             ;;
         *)
             echo "Unknown option: $1"
             exit 1
             ;;
     esac
-    shift
+    shift 2
 done
 
 # Run the code generation command depending on the output language
