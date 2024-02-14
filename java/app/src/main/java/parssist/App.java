@@ -62,12 +62,18 @@ public class App {
 
                     handleTokenTable(tokentable_lex, tokentable_input);
                     break;
+                case "validate": 
+                    String val_lex = "", val_grammar = "", val_input = "", val_algorithm = "auto";
+
+                    if(args.length > 1) val_lex = args[1];
+                    if(args.length > 2) val_grammar = args[2];
+                    if(args.length > 3) val_input = args[3];
+                    if(args.length > 4) val_algorithm = args[4];
+
+                    handleValidate(val_lex, val_grammar, val_input, val_algorithm);
                 default:
-                    System.out.println("Exception: Command not found.");
                     break;
             }
-        } else {
-            System.out.println("Exception: Command not found.");
         }
     }
 
@@ -180,6 +186,40 @@ public class App {
     }
 
     /**
+     * Handle the validation of the grammar.
+     * @param lex The lex file content.
+     * @param grammar The grammar file content.
+     * @param input The input string.
+     * @param algorithm The algorithm of the generated parser.
+     */
+    private static void handleValidate(final String lex, final String grammar, final String input, final String algorithm) {
+        boolean isValid = false;
+        
+        try {
+            switch(algorithm) {
+                case "ll1":
+                    isValid = handleLL1Validation(lex, grammar, input);                   
+                    break;
+                case "auto":
+                default:
+                    final boolean isLL1 = handleLL1Validation(lex, grammar, input);
+                    
+                    if(!isLL1) {
+                        System.out.println("Further algorithms are not implemented yet.");
+                    } else isValid = true;
+                    
+                    break;
+            }
+        } catch(Exception e) {
+            System.out.println("Exception: " + e.getMessage());
+        }
+
+        // because of webassembly and bypass print stream, we need to print the result here
+        if(isValid) { System.out.println("The input is valid.");
+        } else System.out.println("The input is not valid.");
+    }
+
+    /**
      * Handle the LL1 algorithm.
      * @param lex The lex file content.
      * @param grammar The grammar file content.
@@ -205,5 +245,27 @@ public class App {
         }
 
         return true;
+    }
+
+    /**
+     * Handle the LL1 validation.
+     * @param lex The lex file content.
+     * @param grammar The grammar file content.
+     * @param input The input string.
+     * @return True if the grammar is LL(1), false otherwise.
+     * @throws Exception If an exception occurs.
+     */
+    private static boolean handleLL1Validation(String lex, String grammar, String input) throws Exception {
+        try {
+            final Lexer lexer = new Lexer(lex);
+            lexer.parseTokens(lex);
+            
+            final GrammarGenerator generator = new GrammarGenerator(grammar, lexer.getTokenTypes(), true);
+            
+            final TabledrivenPredictiveParser tabledrivenPredictiveParser = new TabledrivenPredictiveParser(generator.generate(), input);
+            return tabledrivenPredictiveParser.computeSystemAnalysis();
+        } catch(Exception e) {
+            throw e;
+        }
     }
 }

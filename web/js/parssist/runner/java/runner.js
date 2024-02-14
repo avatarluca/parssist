@@ -101,7 +101,34 @@ let javaParsetreeGenerator = null;
     })
 })();
 
-function computeJavaParsergenerator(args, parsetree, tokentable, input) {
+let javaValidationGenerator = null;
+(function() {
+    buffer = "";
+    TeaVM.wasm.load("js/parssist/runner/java/wasm/app.wasm", {
+        installImports(o, controller) {
+            function putwchars(address, count) {
+                let instance = controller.instance;
+                let memory = new Uint8Array(instance.exports.memory.buffer);
+
+                let charCodes = [];
+                for (let i = 0; i < count; ++i) {
+                    charCodes.push(memory[address++]);
+                }
+
+                let string = String.fromCharCode.apply(null, charCodes);
+                $rt_putStdoutCustom(string, manageValidation);
+            }
+            o.teavm.putwcharsOut = putwchars;
+            o.teavm.putwcharsErr = putwchars;
+        }, 
+    }).then(teavm => {
+        this.instance = teavm.instance;
+        javaValidationGenerator = (cmd, lexerCode, input, algorithm) => teavm.main([cmd, lexerCode, input, algorithm]).catch(e => handleWasmInputException(e)).finally(() => finalTask());
+        console.log("> Java WASM handleValidation module loaded successfully!");
+    })
+})();
+
+function computeJavaParsergenerator(args, parsetree, tokentable, validation, input) {
     output.setValue("");
     output.clearHistory();
 
@@ -111,6 +138,7 @@ function computeJavaParsergenerator(args, parsetree, tokentable, input) {
     
     if(parsetree) javaParsetreeGenerator("parsetree", args.lexerCode, args.grammarCode, input);
     if(tokentable) javaTokentableGenerator("tokentable", args.lexerCode, input);
+    if(validation) javaValidationGenerator("validate", args.lexerCode, args.grammarCode, input, args.algorithm);
 }
 
 function handleWasmGenerationException(e) {
@@ -135,55 +163,57 @@ function finalTask() {
 
 const manageTokentable = (code) => {
     try {
-        const json = JSON.parse(code);
-        const lex_table = document.getElementById("tokentable-lex");
-        const token_table = document.getElementById("tokentable-tokens");
+        if(code != "" && code != null) {
+            const json = JSON.parse(code);
+            const lex_table = document.getElementById("tokentable-lex");
+            const token_table = document.getElementById("tokentable-tokens");
 
-        const lex_json = json.tokentypes;
-        const token_json = json.tokens;
+            const lex_json = json.tokentypes;
+            const token_json = json.tokens;
 
-        for(const property in lex_json) {
-            const tr = document.createElement("tr");
+            for(const property in lex_json) {
+                const tr = document.createElement("tr");
 
-            let td = document.createElement("td");
-            td.textContent = property;
-            tr.appendChild(td);
+                let td = document.createElement("td");
+                td.textContent = property;
+                tr.appendChild(td);
 
-            td = document.createElement("td");
-            td.textContent = lex_json[property]["type"];
-            tr.appendChild(td);
+                td = document.createElement("td");
+                td.textContent = lex_json[property]["type"];
+                tr.appendChild(td);
 
-            td = document.createElement("td");
-            td.textContent = lex_json[property]["regex"];
-            tr.appendChild(td);
+                td = document.createElement("td");
+                td.textContent = lex_json[property]["regex"];
+                tr.appendChild(td);
 
-            td = document.createElement("td");
-            td.textContent = lex_json[property]["priority"];
-            tr.appendChild(td);
+                td = document.createElement("td");
+                td.textContent = lex_json[property]["priority"];
+                tr.appendChild(td);
 
-            td = document.createElement("td");
-            td.textContent = lex_json[property]["ignore"];
-            tr.appendChild(td);
+                td = document.createElement("td");
+                td.textContent = lex_json[property]["ignore"];
+                tr.appendChild(td);
 
-            lex_table.appendChild(tr);
-        }
+                lex_table.appendChild(tr);
+            }
 
-        for(const property in token_json) {
-            const tr = document.createElement("tr");
+            for(const property in token_json) {
+                const tr = document.createElement("tr");
 
-            let td = document.createElement("td");
-            td.textContent = property;
-            tr.appendChild(td);
+                let td = document.createElement("td");
+                td.textContent = property;
+                tr.appendChild(td);
 
-            td = document.createElement("td");
-            td.textContent = token_json[property]["type"];
-            tr.appendChild(td);
+                td = document.createElement("td");
+                td.textContent = token_json[property]["type"];
+                tr.appendChild(td);
 
-            td = document.createElement("td");
-            td.textContent = token_json[property]["symbol"];
-            tr.appendChild(td);
+                td = document.createElement("td");
+                td.textContent = token_json[property]["symbol"];
+                tr.appendChild(td);
 
-            token_table.appendChild(tr);
+                token_table.appendChild(tr);
+            }
         }
     } catch (e) {
         console.warn("(!) skip current tokentable parsing iteration: " + code);
@@ -194,18 +224,26 @@ const manageCodeGenerator = (code) => {
 }
 const manageParsetree = (code) => {
     try {
-        console.log("Parsetree: " + code);
-        const json = JSON.parse(code);
+        if(code != "" && code != null) {
+            console.log("Parsetree: " + code);
+            const json = JSON.parse(code);
 
-        const chart = Tree(json, {
-            label: (d) => d.name,
-            width: 400,
-            dyNode: 50
-        });
+            const chart = Tree(json, {
+                label: (d) => d.name,
+                width: 400,
+                dyNode: 50
+            });
 
-        document.getElementById("parsetree-board").appendChild(chart);
-        parsetree += code;
+            document.getElementById("parsetree-board").appendChild(chart);
+            parsetree += code;
+        }
     } catch (e) {
         console.warn("(!) skip current parsetree parsing iteration: " + code);
     }
+}
+const manageValidation = (code) => {
+    if(code != "" && code != null) {
+        console.log("Validation: " + code);
+        document.getElementById("validation-board").innerHTML = code;
+    }   
 }

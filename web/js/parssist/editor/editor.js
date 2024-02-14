@@ -143,7 +143,7 @@ function run() {
 
     document.getElementById("output-banner").style.display = "none";
 
-    if(settings.parsetree || settings.tokentable) input = askForInput();
+    if(settings.parsetree || settings.tokentable || settings.validation) input = askForInput();
     
     if(settings.parsetree) document.getElementById("parsetree").style.display = "flex";
     else document.getElementById("parsetree").style.display = "none";
@@ -151,12 +151,16 @@ function run() {
     if(settings.tokentable) document.getElementById("tokentable").style.display = "flex";
     else document.getElementById("tokentable").style.display = "none";
 
+    if(settings.validation) document.getElementById("validation").style.display = "flex";
+    else document.getElementById("validation").style.display = "none";
+
     document.getElementById("parsetree-title").innerHTML = input;
+    document.getElementById("validation-title").innerHTML = input;
 
     switch(settings.language) {
         case "java":
         default:
-            computeJavaParsergenerator({lexerCode, grammarCode, name, module, algorithm}, settings.parsetree, settings.tokentable, input);
+            computeJavaParsergenerator({lexerCode, grammarCode, name, module, algorithm}, settings.parsetree, settings.tokentable, settings.validation, input);
             break;
     }
 

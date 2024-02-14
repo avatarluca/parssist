@@ -22,7 +22,8 @@ export function fetchSettings() {
         language: document.getElementById('output-language').value,
         name: document.getElementById('parser-name').value,
         module: document.getElementById('module-name').value,
-        tokentable: document.getElementById('output-tokentable').checked
+        tokentable: document.getElementById('output-tokentable').checked,
+        validation: document.getElementById('output-validation').checked
     };
 }
 
@@ -40,6 +41,7 @@ function saveSettings() {
         document.getElementById('parser-name').value = settings.name;
         document.getElementById('module-name').value = settings.module;
         document.getElementById('output-tokentable').checked = settings.tokentable;
+        document.getElementById('output-validation').checked = settings.validation;
     }
 })();
 
@@ -59,5 +61,8 @@ document.getElementById("module-name").addEventListener('change', function() {
     saveSettings();
 });
 document.getElementById("output-tokentable").addEventListener('change', function() {
+    saveSettings();
+});
+document.getElementById("output-validation").addEventListener('change', function() {
     saveSettings();
 });

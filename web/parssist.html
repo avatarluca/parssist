@@ -42,16 +42,16 @@
                     <button id="open-grammar">grammar.gra</button>
                 </div>
                 <div class="run-navigation">
-                    <button id="open-settings"><img src="../img/settings_icon.png"></button>
-                    <button id="open-run"><img src="../img/play_icon.png"></button>
+                    <button id="open-settings"><img src="img/settings_icon.png"></button>
+                    <button id="open-run"><img src="img/play_icon.png"></button>
                 </div>
             </div>
-            <textarea id="codeboard"></textarea>
+            <textarea class="scrollbar" id="codeboard"></textarea>
         </section>
         <section id="settings" class="parssist-main">
             <div class="settings-navigation">
-                <button id="close-settings"><img src="../img/code_icon.png"></button>
-                <button id="open-samples"><img src="../img/sample_icon.png"></button>
+                <button id="close-settings"><img src="img/code_icon.png"></button>
+                <button id="open-samples"><img src="img/sample_icon.png"></button>
             </div>
             <div class="settings-content">
                 <div class="settings-content-algorithm">
@@ -62,7 +62,7 @@
                             <input checked type="radio" id="algorithm-auto" name="parse-algorithm" value="auto">
                             <label for="algorithm-auto">auto</label>
                             <div class="tooltip">
-                                <img class="question-mark" id="help-algorithm-auto" src="../img/question_icon.png">
+                                <img class="question-mark" id="help-algorithm-auto" src="img/question_icon.png">
                                 <span class="tooltiptext">This setting allows the generator to decide for itself which algorithm is best / easiest for the grammar entered.</span>
                             </div>
                             <br>
@@ -71,7 +71,7 @@
                             <input type="radio" id="algorithm-ll1" name="parse-algorithm" value="ll1">
                             <label for="algorithm-ll1">LL(1)</label>
                             <div class="tooltip">
-                                <img class="question-mark" id="help-algorithm-auto" src="../img/question_icon.png">
+                                <img class="question-mark" id="help-algorithm-auto" src="img/question_icon.png">
                                 <span class="tooltiptext">The generated parser can determine languages that can be defined with an LL(1) grammar. It is a deterministic pushdown automaton which uses a parse table and is therefore (optimized) non-recursive. It therefore applies a top-down syntax analysis.</span>
                             </div>
                         </div>
@@ -86,6 +86,8 @@
                     <label for="output-parsetree">Parsetree</label><br>
                     <input checked type="checkbox" id="output-tokentable" name="output-tokentable" value="tokentable">
                     <label for="output-tokentable">Tokentable</label><br>
+                    <input checked type="checkbox" id="output-validation" name="output-validation" value="validation">
+                    <label for="output-validation">Validation</label><br>
                 </form>
                 <h3>Generated Code</h3>
                 <form>
@@ -104,15 +106,19 @@
                 </form>
             </div>  
         </section>
-        <section id="output" class="parssist-main">
+        <section id="output" class="parssist-main scrollbar">
             <div id="output-banner">
                 <h1 id="output-banner-no-output">No Output</h1>
             </div>
-            <div id="results">
+            <div id="results" class="scrollbar">
+                <div id="validation">
+                    <p id="validation-title">Input</p>
+                    <p id="validation-board"></p>
+                </div>
                 <div id="parsetree">
                     <div class="navigation parsetree-navigation-board">
                         <div class="parsetree-navigation">
-                            <button id="open-download-json"><img src="../img/download_icon.png"></button>
+                            <button id="open-download-json"><img src="img/download_icon.png"></button>
                         </div>
                     </div>
                     <p id="parsetree-title">Parse Tree</p>
@@ -149,11 +155,11 @@
                 <div id="generator">
                     <div class="navigation generator-navigation">
                         <div class="parser-navigation">
-                            <button id="open-download"><img src="../img/download_icon.png"></button>
+                            <button id="open-download"><img src="img/download_icon.png"></button>
                         </div>
                         <p>Generated Parser</p>
                     </div>
-                    <textarea id="outputboard"></textarea>
+                    <textarea id="outputboard" class="scrollbar"></textarea>
                 </div>
             </div>
         </section>
@@ -179,10 +185,10 @@
                     </caption>
                     <tr>
                         <td>
-                            <textarea class="lex-sample" id="lex-sample-1"></textarea>
+                            <textarea class="lex-sample scrollbar" id="lex-sample-1"></textarea>
                         </td>
                         <td>
-                            <textarea class="grammar-sample" id="gra-sample-1"></textarea>
+                            <textarea class="grammar-sample scrollbar" id="gra-sample-1"></textarea>
                         </td>
                     </tr>
                     <tr>
@@ -201,10 +207,10 @@
                     </caption>
                     <tr>
                         <td>
-                            <textarea class="lex-sample" id="lex-sample-2"></textarea>
+                            <textarea class="lex-sample scrollbar" id="lex-sample-2"></textarea>
                         </td>
                         <td>
-                            <textarea class="grammar-sample" id="gra-sample-2"></textarea>
+                            <textarea class="grammar-sample scrollbar" id="gra-sample-2"></textarea>
                         </td>
                     </tr>
                     <tr>
@@ -223,10 +229,10 @@
                     </caption>
                     <tr>
                         <td>
-                            <textarea class="lex-sample" id="lex-sample-3"></textarea>
+                            <textarea class="lex-sample scrollbar" id="lex-sample-3"></textarea>
                         </td>
                         <td>
-                            <textarea class="grammar-sample" id="gra-sample-3"></textarea>
+                            <textarea class="grammar-sample scrollbar" id="gra-sample-3"></textarea>
                         </td>
                     </tr>
                     <tr>
