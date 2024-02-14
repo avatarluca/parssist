@@ -96,7 +96,7 @@ public class TabledrivenPredictiveParser extends Parser {
     public void setInputString(final String w) throws NullPointerException {
         Objects.requireNonNull(w);
 
-        this.w$ = w + Grammar.EMPTY_SYMBOL;
+        this.w$ = w + Grammar.EMPTY_SYMBOL + Grammar.EMPTY_SYMBOL;
     }
 
     public ParseTreeNode getRoot() {
