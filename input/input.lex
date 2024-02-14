@@ -1,0 +1,6 @@
+%" ", "\t", "\n", "\s", "\r"
+TERMINAL := "\("
+TERMINAL := "\)"
+EMPTY_SYMBOL := "\$"
+NONTERMINAL := "S"
+NONTERMINAL := "T"
