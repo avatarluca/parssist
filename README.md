@@ -2,7 +2,7 @@
 A Parsergenerator, which takes an extended BNF and builds a Parser (with a certain algorithm).
 
 # Get started
-Basically, Parssist takes a grammar and a lexical definition described in [wiki](https://github.com/avatarluca/parssist/wiki). After cloning or forking the project, the predefined files `input.lex` and `input.gra` in the input directory as well as own files can be edited and executed as input input (as well as a few additional arguments described [here](#command-line-arguments)). These two methods are described in more detail below.
+Basically, Parssist takes a grammar and a lexical definition described in the [wiki](https://github.com/avatarluca/parssist/wiki). After cloning or forking the project, the predefined files `input.lex` and `input.gra` in the input directory as well as own files can be edited and executed as input (as well as a few additional arguments described [here](#command-line-arguments)). These two methods are described in more detail below.
 
 ## Online Editor (recommended)
 For using the [online editor](https://www.parsergenerator.valenzelektron.com/web/parssist.html) read the [wiki](https://github.com/avatarluca/parssist/wiki).
@@ -24,13 +24,13 @@ For using the [online editor](https://www.parsergenerator.valenzelektron.com/web
 
 ### Command line arguments
 Argument       | Description
-_______________|_____________________________________________________
-`-g|--grammar` | relative file path to grammar file or inline grammar
-`-l|--lexer` | relative file path to lexer file or inline lexer
-`-lang|--language` | Parser programming language
-`-a|--algorithm` | Parser algorithm
-`-n|--name` | Parser name
-`-m|--module` | Parser module name
-`-mode|--mode` | Input mode
-`-pa|--print-algorithms` | Print the available parser algorithms and keywords for the algorithm argument
-`-pl|--print-languages` | Print the available parser programming languages and keywords for the language argument
+---------------|--------------------------------------------------------
+-g|--grammar | relative file path to grammar file or inline grammar
+-l|--lexer | relative file path to lexer file or inline lexer
+-lang|--language | Parser programming language
+-a|--algorithm | Parser algorithm
+-n|--name | Parser name
+-m|--module | Parser module name
+-mode|--mode | Input mode
+-pa|--print-algorithms | Print the available parser algorithms and keywords for the algorithm argument
+-pl|--print-languages | Print the available parser programming languages and keywords for the language argument
