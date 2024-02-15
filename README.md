@@ -12,11 +12,11 @@ There are 3 ways to use parssist in command line:
 #### Existing grammar definition
 1. Write your grammar in the input.gra file (inside of the input directory).
 2. Write your lexer in the input.lex file (inside of the input directory).
-3. Call ```bash ./run.sh```.
+3. Call ```./run.sh```.
 #### Own grammar definition
 1. Write a grammarfile.
 2. Write a lexerfile.
-3. Call ```bash ./parssist -g [RELATIVE GRAMMAR FILE PATH] -l [RELATIVE LEXER FILE PATH]```.
+3. Call ```./parssist -g [RELATIVE GRAMMAR FILE PATH] -l [RELATIVE LEXER FILE PATH]```.
 #### Inline definition
 1. Write grammar directly with the `-g` argument.
 2. Write grammar directly with the `-l` argument.
