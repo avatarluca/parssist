@@ -25,12 +25,12 @@ There are 3 ways to use parssist in command line:
 ### Command line arguments
 Argument       | Description
 ---------------|--------------------------------------------------------
--g|--grammar | relative file path to grammar file or inline grammar
--l|--lexer | relative file path to lexer file or inline lexer
--lang|--language | Parser programming language
--a|--algorithm | Parser algorithm
--n|--name | Parser name
--m|--module | Parser module name
--mode|--mode | Input mode
--pa|--print-algorithms | Print the available parser algorithms and keywords for the algorithm argument
--pl|--print-languages | Print the available parser programming languages and keywords for the language argument
+-g / --grammar | relative file path to grammar file or inline grammar
+-l / --lexer | relative file path to lexer file or inline lexer
+-lang / --language | Parser programming language
+-a / --algorithm | Parser algorithm
+-n / --name | Parser name
+-m / --module | Parser module name
+-mode / --mode | Input mode
+-pa / --print-algorithms | Print the available parser algorithms and keywords for the algorithm argument
+-pl / --print-languages | Print the available parser programming languages and keywords for the language argument
