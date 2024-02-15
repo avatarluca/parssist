@@ -19,7 +19,7 @@ There are 3 ways to use parssist in command line:
 3. Call ```./parssist -g [RELATIVE GRAMMAR FILE PATH] -l [RELATIVE LEXER FILE PATH]```.
 #### Inline definition
 1. Write grammar directly with the `-g` argument.
-2. Write grammar directly with the `-l` argument.
+2. Write lexer directly with the `-l` argument.
 3. Set mode to 0 (default 1 for path input) `-mode 0`
 
 ### Command line arguments
