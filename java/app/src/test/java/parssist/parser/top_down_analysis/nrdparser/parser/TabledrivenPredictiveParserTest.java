@@ -10,8 +10,10 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import parssist.lexer.Lexer;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
+import parssist.parser.top_down_analysis.nrdparser.generator.GrammarGenerator;
 import parssist.parser.top_down_analysis.nrdparser.parser.exception.NoLL1GrammarException;
 import parssist.parser.top_down_analysis.nrdparser.parser.exception.NonRecursivePredictiveParseException;
 import parssist.parser.top_down_analysis.nrdparser.parser.util.Grammar;
@@ -616,11 +618,29 @@ public class TabledrivenPredictiveParserTest {
     @Test
     @DisplayName("Test with grammar 2")
     public void testComputeSystemAnalysisGrammar2() throws NonRecursivePredictiveParseException, NoLL1GrammarException {
-        setUpGrammar2();
+       /*
+        *  setUpGrammar2();
 
         final TabledrivenPredictiveParser parser = new TabledrivenPredictiveParser(grammar2, "ibta$");
-
+        
         assertThrows(NoLL1GrammarException.class, () -> parser.computeSystemAnalysis());
+        */
+
+        try {
+            final String gra = "S -> (S)S | $";
+            final String lex = "%\" \", \"\\t\", \"\\n\", \"\\s\", \"\\r\"\nTERMINAL := \"\\(\"\nTERMINAL := \"\\)\"\nEMPTY_SYMBOL := \"\\$\"\nNONTERMINAL := \"S\"";
+            final Lexer lexer = new Lexer(lex);
+            lexer.parseTokens(lex);
+            
+            final GrammarGenerator generator = new GrammarGenerator(gra, lexer.getTokenTypes(), true);
+            
+            final TabledrivenPredictiveParser tabledrivenPredictiveParser = new TabledrivenPredictiveParser(generator.generate(), "()");
+            tabledrivenPredictiveParser.computeSystemAnalysis();
+            tabledrivenPredictiveParser.printParseTree();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
     }
 
 

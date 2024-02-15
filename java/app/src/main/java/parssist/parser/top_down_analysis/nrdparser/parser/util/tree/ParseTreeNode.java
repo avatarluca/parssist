@@ -2,6 +2,7 @@ package parssist.parser.top_down_analysis.nrdparser.parser.util.tree;
 
 import java.util.List;
 
+import parssist.Config;
 import parssist.lexer.util.Token;
 import parssist.parser.top_down_analysis.nrdparser.parser.util.tree.visitor.Visitor;
 
@@ -65,10 +66,13 @@ public class ParseTreeNode {
 
     /**
      * Add a child to the node if its not already a child.
+     * TODO: This is a hack to avoid adding the same child multiple times. This should be fixed in the future, 
+     * by giving the grammar to the parsetree and call its {@link Grammar#isNonTerminal(String)} method to check if the child is a non-terminal.
+     * Maybe also check the input token, so that we could also add same terminals multiple times.
      * @param child Child to add.
      */
     public void addChild(final ParseTreeNode child) {
-        if(!children.contains(child)) children.add(child);
+        if(child.getToken().tokenType().name().equals(Config.LEXER_NONTERMINAL) || !children.contains(child)) children.add(child);
     }
 
     /**
