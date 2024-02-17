@@ -34,3 +34,7 @@ Argument       | Description
 -mode / --mode | Input mode
 -pa / --print-algorithms | Print the available parser algorithms and keywords for the algorithm argument
 -pl / --print-languages | Print the available parser programming languages and keywords for the language argument
+
+# Todo
+- LR-Parser
+- Error Recovery Methods (Settings)
