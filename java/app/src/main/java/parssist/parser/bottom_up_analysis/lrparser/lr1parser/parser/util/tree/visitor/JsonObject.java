@@ -1,4 +1,4 @@
-package parssist.parser.bottom_up_analysis.lrparser.lr0parser.parser.util.tree.visitor;
+package parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser.util.tree.visitor;
 
 import java.util.List;
 import java.util.Map;

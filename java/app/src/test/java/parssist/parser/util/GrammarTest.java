@@ -274,6 +274,9 @@ public class GrammarTest {
         alphabet.add(new Token(
             new TokenType("TERMINAL", "", 0, false), "id"
         ));
+        alphabet.add(new Token(
+            new TokenType("EMPTY_SYMBOL", "", 0, false), "$"
+        ));
 
         startsymbol = new Token(
             new TokenType("NONTERMINAL", "", 0, false), "E"

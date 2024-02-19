@@ -79,6 +79,8 @@ public class Config {
                 "EMPTY_SYMBOL := \"$\"";
 
 
+    public static final String BOTTOM_UP_PARSER_ERROR_NO_SLR1_GRAMMAR="Grammar is no SLR1";
+            
     public static final String GRAMMAR_ERROR_INVALID_SYMBOL="String is not a symbol";
 
     public static final String TEMPLATE = "{{package_name}};\r\n" + //

@@ -1,11 +1,12 @@
-package parssist.parser.bottom_up_analysis.lrparser.lr0parser.parser.util.tree.visitor;
+package parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser.util.tree.visitor;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.HashMap;
 
-import parssist.parser.bottom_up_analysis.lrparser.lr0parser.parser.util.tree.ParseTreeNode;
+import parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser.util.tree.ParseTreeNode;
+
+import java.util.HashMap;
 
 
 /**

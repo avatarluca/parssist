@@ -333,6 +333,8 @@ public class Grammar {
      * @param token The new lhs token of the argument.
      */
     public void addArgumentProduction(final Token lhs) {
+        if(extended) return;
+
         final List<Token[]> rhs = new ArrayList<>();
         rhs.add(new Token[] {
             startsymbol

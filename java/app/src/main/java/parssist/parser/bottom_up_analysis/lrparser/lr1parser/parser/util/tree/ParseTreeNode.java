@@ -1,10 +1,10 @@
-package parssist.parser.bottom_up_analysis.lrparser.lr0parser.parser.util.tree;
+package parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser.util.tree;
 
 import java.util.List;
 
 import parssist.Config;
 import parssist.lexer.util.Token;
-import parssist.parser.bottom_up_analysis.lrparser.lr0parser.parser.util.tree.visitor.Visitor;
+import parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser.util.tree.visitor.Visitor;
 
 import java.util.ArrayList;
 

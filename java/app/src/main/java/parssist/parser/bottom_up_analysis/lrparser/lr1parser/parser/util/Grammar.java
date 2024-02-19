@@ -1,4 +1,4 @@
-package parssist.parser.bottom_up_analysis.lrparser.lr0parser.parser.util;
+package parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser.util;
 
 import java.util.ArrayList;
 import java.util.Comparator;
