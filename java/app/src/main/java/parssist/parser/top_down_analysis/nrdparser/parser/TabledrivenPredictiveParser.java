@@ -16,11 +16,11 @@ import parssist.lexer.util.TokenType;
 import parssist.parser.Parser;
 import parssist.parser.top_down_analysis.nrdparser.parser.exception.NoLL1GrammarException;
 import parssist.parser.top_down_analysis.nrdparser.parser.exception.NonRecursivePredictiveParseException;
-import parssist.parser.top_down_analysis.nrdparser.parser.util.Grammar;
-import parssist.parser.top_down_analysis.nrdparser.parser.util.Production;
-import parssist.parser.top_down_analysis.nrdparser.parser.util.Stack;
-import parssist.parser.top_down_analysis.nrdparser.parser.util.tree.ParseTreeNode;
-import parssist.parser.top_down_analysis.nrdparser.parser.util.tree.visitor.JsonLikeTreeVisitor;
+import parssist.parser.util.Grammar;
+import parssist.parser.util.Production;
+import parssist.parser.util.Stack;
+import parssist.parser.util.tree.ParseTreeNode;
+import parssist.parser.util.tree.visitor.JsonLikeTreeVisitor;
 
 
 /**

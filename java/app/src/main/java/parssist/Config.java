@@ -35,13 +35,14 @@ public class Config {
     public static final String GRAMMAR_TOKEN_ERROR_STARTSYMBOL_ASSIGNMENT="Illegal startsymbol assignment";
     public static final String GRAMMAR_TOKEN_ERROR_PRODUCTION_RULE="Illegal productionrule assignment";
     public static final String GRAMMAR_TOKEN_PRODUCTIONSYMBOLS_REGEX="^((\\-> *)|(\\| *))";
+    public static final String GRAMMAR_ARGUMENT_SYMBOL = "S_";
 
     public static final String PARSER_INIT_INPUT_DIR="definition/grammar/input.gra";
 
-
     public static final String NONREC_PARSER_ERROR_EMPTY_SYMBOL="Empty Symbol";
     public static final String NONREC_PARSER_ERROR_INVALID_TOKEN="Invalid Token";
-    public static final String NONREC_PARSER_ERROR_PREPROCESSED="To create a parsetable the grammar should be preprocessed";
+    public static final String NONREC_PARSER_ERROR_PREPROCESSED="Grammar should be preprocessed";
+    public static final String NONREC_PARSER_ERROR_EXTENDED="Grammar should be extended";
     public static final String NONREC_PARSER_ERROR_NO_LL1_GRAMMAR="Grammar is no LL1";
     public static final String NONREC_PARSER_ERROR_NO_PRODUCTION="No next production";
     public static final String NONREC_PARSER_TEMPLATE_OPENTOKEN="{{";

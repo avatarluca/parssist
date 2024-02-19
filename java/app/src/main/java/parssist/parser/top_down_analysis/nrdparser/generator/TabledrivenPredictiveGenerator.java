@@ -9,8 +9,8 @@ import parssist.parser.ParserGenerator;
 import parssist.parser.top_down_analysis.nrdparser.generator.exception.GenerationException;
 import parssist.parser.top_down_analysis.nrdparser.parser.TabledrivenPredictiveParser;
 import parssist.parser.top_down_analysis.nrdparser.parser.exception.NoLL1GrammarException;
-import parssist.parser.top_down_analysis.nrdparser.parser.util.Grammar;
-import parssist.parser.top_down_analysis.nrdparser.parser.util.Production;
+import parssist.parser.util.Grammar;
+import parssist.parser.util.Production;
 
 
 /**

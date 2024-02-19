@@ -16,12 +16,12 @@ import parssist.lexer.exception.InvalidTokenException;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
 import parssist.parser.top_down_analysis.nrdparser.generator.exception.ParseException;
-import parssist.parser.top_down_analysis.nrdparser.parser.util.Grammar;
-import parssist.parser.top_down_analysis.nrdparser.parser.util.Production;
+import parssist.parser.util.Grammar;
+import parssist.parser.util.Production;
 
 
 /**
- * Class to generate the {@link parssist.parser.top_down_analysis.nrdparser.parser.util.Grammar grammar}.
+ * Class to generate the {@link parssist.parser.util.Grammar grammar}.
  */
 public class GrammarGenerator {
     private String lex;

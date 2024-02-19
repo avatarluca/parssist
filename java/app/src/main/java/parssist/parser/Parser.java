@@ -1,6 +1,6 @@
 package parssist.parser;
 
-import parssist.parser.top_down_analysis.nrdparser.parser.util.tree.ParseTreeNode;
+import parssist.parser.util.tree.ParseTreeNode;
 
 
 /**

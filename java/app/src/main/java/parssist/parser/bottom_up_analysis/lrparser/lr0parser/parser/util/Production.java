@@ -1,4 +1,4 @@
-package parssist.parser.top_down_analysis.nrdparser.parser.util;
+package parssist.parser.bottom_up_analysis.lrparser.lr0parser.parser.util;
 
 import java.util.List;
 

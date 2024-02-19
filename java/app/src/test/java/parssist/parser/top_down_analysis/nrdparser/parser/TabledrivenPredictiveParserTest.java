@@ -10,14 +10,12 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import parssist.lexer.Lexer;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
-import parssist.parser.top_down_analysis.nrdparser.generator.GrammarGenerator;
 import parssist.parser.top_down_analysis.nrdparser.parser.exception.NoLL1GrammarException;
 import parssist.parser.top_down_analysis.nrdparser.parser.exception.NonRecursivePredictiveParseException;
-import parssist.parser.top_down_analysis.nrdparser.parser.util.Grammar;
-import parssist.parser.top_down_analysis.nrdparser.parser.util.Production;
+import parssist.parser.util.Grammar;
+import parssist.parser.util.Production;
 
 
 /**

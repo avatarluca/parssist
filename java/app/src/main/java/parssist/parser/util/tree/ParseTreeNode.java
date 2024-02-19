@@ -1,10 +1,10 @@
-package parssist.parser.top_down_analysis.nrdparser.parser.util.tree;
+package parssist.parser.util.tree;
 
 import java.util.List;
 
 import parssist.Config;
 import parssist.lexer.util.Token;
-import parssist.parser.top_down_analysis.nrdparser.parser.util.tree.visitor.Visitor;
+import parssist.parser.util.tree.visitor.Visitor;
 
 import java.util.ArrayList;
 
