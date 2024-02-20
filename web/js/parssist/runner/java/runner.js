@@ -144,12 +144,13 @@ function computeJavaParsergenerator(args, parsetree, tokentable, validation, inp
 function handleWasmGenerationException(e) {
     output.setValue("");
     output.clearHistory();
-    TeaVM.wasm.refresh
+    TeaVM.wasm.refresh;
     console.warn(e);
 
     loadParserGenerator();
 
-    output.setValue("WebAssembly Exception:\nCould not generate a parser with these input files :(.\n\nIt is possible that no suitable algorithm has yet been found for the grammar entered.\nIf you are not sure about this, don't hesitate to contact us or create an issue with the grammar in the Github project.");
+    output.setOption("mode", "text/plain");
+    output.setValue("WebAssembly Exception:\nCould not generate a parser with these input files :(.\n\nIt is possible that no suitable algorithm has yet been found for the grammar entered. If your using auto mode, please try a specific algorithm.\n\If you are not sure about this, don't hesitate to contact us or create an issue with the grammar in the Github project.");
 }
 
 function handleWasmInputException(e) {
@@ -224,7 +225,6 @@ const manageCodeGenerator = (code) => {
 }
 const manageParsetree = (code) => {
     try {
-        console.log(code)
         if(code != "" && code != null) {
             console.log("Parsetree: " + code);
             const json = JSON.parse(code);
@@ -243,7 +243,6 @@ const manageParsetree = (code) => {
     }
 }
 const manageValidation = (code) => {
-    console.log("Validation: " + code);
     if(code != "" && code != null) {
         console.log("Validation: " + code);
         document.getElementById("validation-board").innerHTML = code;

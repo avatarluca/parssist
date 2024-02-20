@@ -2,6 +2,8 @@ package parssist;
 
 import java.util.List;
 
+import javax.management.RuntimeErrorException;
+
 import parssist.lexer.Lexer;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
@@ -12,7 +14,6 @@ import parssist.parser.top_down_analysis.nrdparser.generator.GrammarGenerator;
 import parssist.parser.top_down_analysis.nrdparser.generator.TabledrivenPredictiveGenerator;
 import parssist.parser.top_down_analysis.nrdparser.parser.TabledrivenPredictiveParser;
 import parssist.parser.top_down_analysis.nrdparser.parser.exception.NoLL1GrammarException;
-import parssist.parser.util.Grammar;
 import parssist.util.Reader;
 
 
@@ -101,7 +102,13 @@ public class App {
                     break;
                 case "auto":
                 default:
-                    final boolean isLL1 = handleLL1(lex, grammar, name, module);
+                    boolean isLL1 = false;
+
+                    try {
+                        isLL1 = handleLL1(lex, grammar, name, module);
+                    } catch(Exception e) {
+                        isLL1 = false;
+                    }
 
                     if(!isLL1) {
                         final boolean isSLR = handleSLR(lex, grammar, name, module);
@@ -155,7 +162,13 @@ public class App {
                     break;
                 case "auto":    
                 default:
-                    final boolean isLL1 = handleLL1ParseTree(lex, grammar, input);
+                    boolean isLL1 = false;
+
+                    try {
+                        isLL1 = handleLL1ParseTree(lex, grammar, input);
+                    } catch(Exception e) {
+                        isLL1 = false;
+                    }
 
                     if(!isLL1) {
                         final boolean isSLR = handleSLRParseTree(lex, grammar, input);
@@ -230,7 +243,13 @@ public class App {
                     break;
                 case "auto":    
                 default:
-                    final boolean isLL1 = handleLL1Validation(lex, grammar, input);
+                    boolean isLL1 = false;
+
+                    try {
+                        isLL1 = handleLL1Validation(lex, grammar, input);
+                    } catch(Exception e) {
+                        isLL1 = false;
+                    }
 
                     if(!isLL1) {
                         final boolean isSLR = handleSLRValidation(lex, grammar, input);
@@ -247,8 +266,8 @@ public class App {
         }
 
         // because of webassembly and bypass print stream, we need to print the result here
-        if(isValid) { System.out.println("The input is valid.");
-        } else System.out.println("The input is not valid.");
+        if(isValid) System.out.println("The input is valid.");
+        else System.out.println("The input is not valid.");
     }
 
     /**

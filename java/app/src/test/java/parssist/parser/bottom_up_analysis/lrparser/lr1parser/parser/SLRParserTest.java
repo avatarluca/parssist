@@ -362,7 +362,11 @@ public class SLRParserTest {
         setUp3();
 
         final SLRParser parser = new SLRParser(grammar);
-        parser.createParseTable();    }
+        final LRParseTable table = parser.createParseTable();
+        final String expectTable = "SHIFT 3:REDUCE 2:REDUCE 2:;ERROR 0:ERROR 0:ACCEPT 0:;SHIFT 3:REDUCE 2:REDUCE 2:;SHIFT 3:REDUCE 2:REDUCE 2:;ERROR 0:REDUCE 1:REDUCE 1:;ERROR 0:SHIFT 6:ERROR 0:;REDUCE 3:REDUCE 3:REDUCE 3:;1:2:0:;0:0:0:;4:2:0:;5:2:0:;0:0:0:;0:0:0:;0:0:0:;";
+        
+        assertEquals(expectTable, table.print());
+    }
 
 
     /**

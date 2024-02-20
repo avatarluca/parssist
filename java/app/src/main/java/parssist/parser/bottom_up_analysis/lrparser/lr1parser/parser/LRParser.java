@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -58,7 +59,6 @@ abstract public class LRParser extends Parser {
         stack.push(new ParseTreeNode(state));
 
         while(it < Config.PARSELIMIT) {
-
             final ParseTreeNode top = stack.peek();
             if(top.hasState()) state = top.getState();
 
@@ -81,8 +81,9 @@ abstract public class LRParser extends Parser {
                 ip += a.symbol().length();
             } else if(action.type == Action.Type.REDUCE) {
                 final ParseTreeNode newNode = new ParseTreeNode(grammar.getProductions().get(action.value).getLhs());
+                final int beta_abs = Stream.of(grammar.getProductions().get(action.value).getRhs().get(0)).filter(e -> !e.tokenType().name().equals(Config.LEXER_EMPTY_SYMBOL)).toArray().length * 2;
 
-                for(int i = 0; i < grammar.getProductions().get(action.value).getRhs().get(0).length * 2; i++) {
+                for(int i = 0; i < beta_abs; i++) {
                     final ParseTreeNode node = stack.pop();
                     if(node.getToken() != null) updateTree(newNode, node);
                 }

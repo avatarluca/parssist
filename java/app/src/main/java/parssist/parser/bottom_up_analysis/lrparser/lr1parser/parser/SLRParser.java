@@ -77,7 +77,6 @@ public class SLRParser extends LRParser {
                         if(equals) gotos[i][grammar.getVocabulary().indexOf(A)] = j;
                     }
                 }
-
                 if(isReductionPossible(item, C.get(i))) {
                     final Set<Token> follow = grammar.follow(item.getProduction().getLhs().symbol(), item.getProduction().getLhs().symbol());
 
@@ -149,8 +148,8 @@ public class SLRParser extends LRParser {
      */
     private boolean isReductionPossible(final Item item, final List<Item> Ii) {
         final Token lhs = item.getProduction().getLhs();
-
-        return Ii.contains(item) && !lhs.equals(grammar.getStartsymbol()) && item.getPosition() == item.getProduction().getRhs().get(0).length;
+        
+        return Ii.contains(item) && !lhs.equals(grammar.getStartsymbol()) && (item.getPosition() == item.getProduction().getRhs().get(0).length || item.getProduction().getRhs().get(0)[item.getPosition()].symbol().equals(Grammar.EMPTY_SYMBOL));
     }
 
     /**
