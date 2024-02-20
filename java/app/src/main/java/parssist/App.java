@@ -2,9 +2,14 @@ package parssist;
 
 import java.util.List;
 
+import javax.management.RuntimeErrorException;
+
 import parssist.lexer.Lexer;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
+import parssist.parser.bottom_up_analysis.lrparser.lr1parser.generator.SLRGenerator;
+import parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser.LRParser;
+import parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser.SLRParser;
 import parssist.parser.top_down_analysis.nrdparser.generator.GrammarGenerator;
 import parssist.parser.top_down_analysis.nrdparser.generator.TabledrivenPredictiveGenerator;
 import parssist.parser.top_down_analysis.nrdparser.parser.TabledrivenPredictiveParser;
@@ -46,13 +51,14 @@ public class App {
                     }
                     break;
                 case "parsetree":
-                    String parsetree_lex = "", parsetree_grammar = "", parsetree_input = "";
+                    String parsetree_lex = "", parsetree_grammar = "", parsetree_input = "", parsetree_algorithm = "auto";
 
                     if(args.length > 1) parsetree_lex = args[1];
                     if(args.length > 2) parsetree_grammar = args[2];
                     if(args.length > 3) parsetree_input = args[3];
+                    if(args.length > 4) parsetree_algorithm = args[4];
 
-                    handleParseTree(parsetree_lex, parsetree_grammar, parsetree_input);
+                    handleParseTree(parsetree_lex, parsetree_grammar, parsetree_input, parsetree_algorithm);
                     break;
                 case "tokentable":
                     String tokentable_lex = "", tokentable_input = "";
@@ -91,12 +97,25 @@ public class App {
                 case "ll1":
                     handleLL1(lex, grammar, name, module);                   
                     break;
+                case "slr1":
+                    handleSLR(lex, grammar, name, module);
+                    break;
                 case "auto":
                 default:
-                    final boolean isLL1 = handleLL1(lex, grammar, name, module);
+                    boolean isLL1 = false;
+
+                    try {
+                        isLL1 = handleLL1(lex, grammar, name, module);
+                    } catch(Exception e) {
+                        isLL1 = false;
+                    }
 
                     if(!isLL1) {
-                        System.out.println("Further algorithms are not implemented yet.");
+                        final boolean isSLR = handleSLR(lex, grammar, name, module);
+
+                        if(!isSLR) {
+                            System.out.println("Further algorithms are not implemented yet.");
+                        }
                     }
                     break;
             }
@@ -130,17 +149,37 @@ public class App {
      * @param lex The lex file content.
      * @param grammar The grammar file content.
      * @param input The input string.
+     * @param algorithm The algorithm of the generated parser.
      */
-    private static void handleParseTree(final String lex, final String grammar, final String input) {
+    private static void handleParseTree(final String lex, final String grammar, final String input, final String algorithm) {
         try {
-            final Lexer lexer = new Lexer(lex);
-            lexer.parseTokens(lex);
+            switch(algorithm) {
+                case "ll1":
+                    handleLL1ParseTree(lex, grammar, input);           
+                    break;
+                case "slr1":
+                    handleSLRParseTree(lex, grammar, input);
+                    break;
+                case "auto":    
+                default:
+                    boolean isLL1 = false;
 
-            final GrammarGenerator generator = new GrammarGenerator(grammar, lexer.getTokenTypes(), true);
+                    try {
+                        isLL1 = handleLL1ParseTree(lex, grammar, input);
+                    } catch(Exception e) {
+                        isLL1 = false;
+                    }
 
-            final TabledrivenPredictiveParser tabledrivenPredictiveGenerator = new TabledrivenPredictiveParser(generator.generate(), input);
-            tabledrivenPredictiveGenerator.computeSystemAnalysis();
-            tabledrivenPredictiveGenerator.printParseTree();
+                    if(!isLL1) {
+                        final boolean isSLR = handleSLRParseTree(lex, grammar, input);
+                        
+                        if(!isSLR) {
+                            System.out.println("Further algorithms are not implemented yet.");
+                        } 
+                    }
+                    
+                    break;
+            }
         } catch(Exception e) {
             System.out.println("Exception: " + e.getMessage());
         }
@@ -194,18 +233,30 @@ public class App {
      */
     private static void handleValidate(final String lex, final String grammar, final String input, final String algorithm) {
         boolean isValid = false;
-        
         try {
             switch(algorithm) {
                 case "ll1":
                     isValid = handleLL1Validation(lex, grammar, input);                   
                     break;
-                case "auto":
+                case "slr1":
+                    isValid = handleSLRValidation(lex, grammar, input);
+                    break;
+                case "auto":    
                 default:
-                    final boolean isLL1 = handleLL1Validation(lex, grammar, input);
-                    
+                    boolean isLL1 = false;
+
+                    try {
+                        isLL1 = handleLL1Validation(lex, grammar, input);
+                    } catch(Exception e) {
+                        isLL1 = false;
+                    }
+
                     if(!isLL1) {
-                        System.out.println("Further algorithms are not implemented yet.");
+                        final boolean isSLR = handleSLRValidation(lex, grammar, input);
+
+                        if(!isSLR) {
+                            System.out.println("Further algorithms are not implemented yet.");
+                        } else isValid = true;
                     } else isValid = true;
                     
                     break;
@@ -215,8 +266,8 @@ public class App {
         }
 
         // because of webassembly and bypass print stream, we need to print the result here
-        if(isValid) { System.out.println("The input is valid.");
-        } else System.out.println("The input is not valid.");
+        if(isValid) System.out.println("The input is valid.");
+        else System.out.println("The input is not valid.");
     }
 
     /**
@@ -248,6 +299,34 @@ public class App {
     }
 
     /**
+     * Handle the SLR algorithm.
+     * @param lex The lex file content.
+     * @param grammar The grammar file content.
+     * @param name The name of the generated parser.
+     * @param module The module of the generated parser.
+     * @return True if the grammar is SLR(1), false otherwise.
+     * @throws Exception If an exception occurs.
+     */
+    private static boolean handleSLR(String lex, String grammar, String name, String module) throws Exception {
+        try {
+            final Lexer lexer = new Lexer(lex);
+            lexer.parseTokens(lex);
+            
+            final GrammarGenerator generator = new GrammarGenerator(grammar, lexer.getTokenTypes(), true);
+            
+            final SLRGenerator slrGenerator = new SLRGenerator(generator.generate());
+            System.out.println(slrGenerator.generate(name, module)); 
+        } catch(NoLL1GrammarException e) {
+            System.out.println("Exception: " + e.getMessage());
+            return false;
+        } catch(Exception e) {
+            throw e;
+        }
+
+        return true;
+    }
+
+    /**
      * Handle the LL1 validation.
      * @param lex The lex file content.
      * @param grammar The grammar file content.
@@ -265,7 +344,78 @@ public class App {
             final TabledrivenPredictiveParser tabledrivenPredictiveParser = new TabledrivenPredictiveParser(generator.generate(), input);
             return tabledrivenPredictiveParser.computeSystemAnalysis();
         } catch(Exception e) {
-            throw e;
+            return false;
+        }
+    }
+
+    /**
+     * Handle the SLR validation.
+     * @param lex The lex file content.
+     * @param grammar The grammar file content.
+     * @param input The input string.
+     * @return True if the grammar is SLR(1), false otherwise.
+     * @throws Exception If an exception occurs.
+     */
+    private static boolean handleSLRValidation(String lex, String grammar, String input) throws Exception {
+        try {
+            final Lexer lexer = new Lexer(lex);
+            lexer.parseTokens(lex);
+            
+            final GrammarGenerator generator = new GrammarGenerator(grammar, lexer.getTokenTypes(), true);
+
+            final LRParser slrParser = new SLRParser(generator.generate(), input);
+            slrParser.parse(input);
+            return true;
+        } catch(Exception e) {            
+            return false;
+        }
+    }
+
+    /**
+     * Handle the LL1 parsetree.
+     * @param lex The lex file content.
+     * @param grammar The grammar file content.
+     * @param input The input string.
+     * @return True if the grammar is LL(1), false otherwise.
+     * @throws Exception If an exception occurs.
+     */
+    private static boolean handleLL1ParseTree(String lex, String grammar, String input) throws Exception {
+        try {
+            final Lexer lexer = new Lexer(lex);
+            lexer.parseTokens(lex);
+            
+            final GrammarGenerator generator = new GrammarGenerator(grammar, lexer.getTokenTypes(), true);
+
+            final TabledrivenPredictiveParser tabledrivenPredictiveGenerator = new TabledrivenPredictiveParser(generator.generate(), input);
+            tabledrivenPredictiveGenerator.computeSystemAnalysis();
+            tabledrivenPredictiveGenerator.printParseTree();  
+            return true;
+        } catch(Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Handle the SLR parsetree.
+     * @param lex The lex file content.
+     * @param grammar The grammar file content.
+     * @param input The input string.
+     * @return True if the grammar is SLR(1), false otherwise.
+     * @throws Exception If an exception occurs.
+     */
+    private static boolean handleSLRParseTree(String lex, String grammar, String input) throws Exception {
+        try {
+            final Lexer lexer = new Lexer(lex);
+            lexer.parseTokens(lex);
+            
+            final GrammarGenerator generator = new GrammarGenerator(grammar, lexer.getTokenTypes(), true);
+
+            final LRParser slrParser = new SLRParser(generator.generate(), input);
+            slrParser.parse(input);
+            slrParser.printParseTree();  
+            return true;
+        } catch(Exception e) {
+            return false;
         }
     }
 }

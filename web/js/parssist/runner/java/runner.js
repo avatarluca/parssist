@@ -96,7 +96,7 @@ let javaParsetreeGenerator = null;
         }, 
     }).then(teavm => {
         this.instance = teavm.instance;
-        javaParsetreeGenerator = (cmd, lexerCode, grammarCode, input) => teavm.main([cmd, lexerCode, grammarCode, input]).catch(e => handleWasmInputException(e)).finally(() => finalTask());
+        javaParsetreeGenerator = (cmd, lexerCode, grammarCode, input, algorithm) => teavm.main([cmd, lexerCode, grammarCode, input, algorithm]).catch(e => handleWasmInputException(e)).finally(() => finalTask());
         console.log("> Java WASM handleParseTree module loaded successfully!");
     })
 })();
@@ -123,7 +123,7 @@ let javaValidationGenerator = null;
         }, 
     }).then(teavm => {
         this.instance = teavm.instance;
-        javaValidationGenerator = (cmd, lexerCode, input, algorithm) => teavm.main([cmd, lexerCode, input, algorithm]).catch(e => handleWasmInputException(e)).finally(() => finalTask());
+        javaValidationGenerator = (cmd, lexerCode, grammarCode, input, algorithm) => teavm.main([cmd, lexerCode, grammarCode, input, algorithm]).catch(e => handleWasmInputException(e)).finally(() => finalTask());
         console.log("> Java WASM handleValidation module loaded successfully!");
     })
 })();
@@ -135,8 +135,8 @@ function computeJavaParsergenerator(args, parsetree, tokentable, validation, inp
     javaParsergenerator("codegeneration", args);
 
     if(input == null) input = "";
-    
-    if(parsetree) javaParsetreeGenerator("parsetree", args.lexerCode, args.grammarCode, input);
+
+    if(parsetree) javaParsetreeGenerator("parsetree", args.lexerCode, args.grammarCode, input, args.algorithm);
     if(tokentable) javaTokentableGenerator("tokentable", args.lexerCode, input);
     if(validation) javaValidationGenerator("validate", args.lexerCode, args.grammarCode, input, args.algorithm);
 }
@@ -144,12 +144,13 @@ function computeJavaParsergenerator(args, parsetree, tokentable, validation, inp
 function handleWasmGenerationException(e) {
     output.setValue("");
     output.clearHistory();
-    TeaVM.wasm.refresh
+    TeaVM.wasm.refresh;
     console.warn(e);
 
     loadParserGenerator();
 
-    output.setValue("WebAssembly Exception:\nCould not generate a parser with these input files :(.\n\nIt is possible that no suitable algorithm has yet been found for the grammar entered.\nIf you are not sure about this, don't hesitate to contact us or create an issue with the grammar in the Github project.");
+    output.setOption("mode", "text/plain");
+    output.setValue("WebAssembly Exception:\nCould not generate a parser with these input files :(.\n\nIt is possible that no suitable algorithm has yet been found for the grammar entered. If your using auto mode, please try a specific algorithm.\n\If you are not sure about this, don't hesitate to contact us or create an issue with the grammar in the Github project.");
 }
 
 function handleWasmInputException(e) {

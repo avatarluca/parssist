@@ -122,6 +122,8 @@ function run() {
     console.log("> Lexer:\n" + lexerCode);
     console.log("> Grammar:\n" + grammarCode);
 
+    output.setOption("mode", "text/x-java");
+
     const parsetreeDiv = document.getElementById("parsetree-board");
     parsetreeDiv.innerHTML = "";
     parsetree = "";

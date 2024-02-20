@@ -1,4 +1,4 @@
-package parssist.parser.top_down_analysis.nrdparser.parser.util;
+package parssist.parser.util;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -11,6 +11,7 @@ import java.util.TreeSet;
 import parssist.Config;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
+import parssist.parser.top_down_analysis.nrdparser.parser.TabledrivenPredictiveParser;
 
 
 /**
@@ -27,8 +28,10 @@ public class Grammar {
     private final List<Token> vocabulary;
     private final List<Token> alphabet;
     private final List<Production> productions;
-    private final Token startsymbol;
     private final boolean preproc;
+
+    private Token startsymbol;
+    private boolean extended;
 
 
     /**
@@ -57,6 +60,7 @@ public class Grammar {
         else this.productions = productions;
 
         this.preproc = preproc;
+        this.extended = false;
     }
 
 
@@ -82,6 +86,10 @@ public class Grammar {
 
     public boolean isPreproc() {
         return preproc;
+    }
+
+    public boolean isExtended() {
+        return extended;
     }
 
 
@@ -214,6 +222,131 @@ public class Grammar {
                         .anyMatch(e -> symbol.matches(Config.LEXER_REGEX_STARTSYMBOL + e + Config.LEXER_REGEX_ENDSYMBOL));
     }
 
+    /**
+     * Calculates CLOSURE(I) for the given itemset I.
+     * It is the set of all items J such that (A -> a.Bb) is in J whenever (A -> a.Bb) is in I and b is in FIRST(b) and B -> .b is in I.
+     * A item is represented as a 2 field object, where the first field is the production and the second field is the dot position in the rhs.
+     * @param itemset The itemset for which the cover should be calculated.
+     * @return The cover of the given itemset.
+     * @throws IllegalArgumentException If the grammar is not preprocessed.
+     */
+    public List<Item> closure(final List<Item> I) {
+        if(!isPreproc()) throw new IllegalArgumentException(Config.NONREC_PARSER_ERROR_PREPROCESSED);
+
+        List<Item> J = new ArrayList<>();
+        boolean changed = true;
+        J.addAll(I);
+    
+        while(changed) {
+            final List<Item> toAdd = new ArrayList<>();
+
+            for(Item item : J) {
+                Token $B = null;
+
+                if(item.getPosition() >= item.getProduction().getRhs().get(0).length) $B = new Token(new TokenType(Config.LEXER_EMPTY_SYMBOL, Grammar.EMPTY_SYMBOL, 0, false), Grammar.EMPTY_SYMBOL);
+                else $B = item.getProduction().getRhs().get(0)[item.getPosition()];
+    
+                if(isSymbolNonTerminal($B.symbol())) {
+                    for(Production production : productions) {
+                        final Item newItem = new Item(production, 0);
+    
+                        if(production.getLhs().symbol().equals($B.symbol())
+                        && !J.contains(newItem)) toAdd.add(newItem);
+                    }
+                }
+            }
+
+            if(toAdd.size() < 1) changed = false;
+            else J.addAll(toAdd);
+        }
+
+        return J;
+    }
+
+    /**
+     * Calculates GOTO(I, X) for the given itemset I and symbol X.
+     * Uses the start symbol S.
+     * @param I The itemset.
+     * @param X The symbol.
+     * @return The goto of the given itemset and symbol.
+     * @throws IllegalArgumentException If the grammar is not preprocessed.
+     */
+    public List<Item> goTo(final List<Item> I, final Token X) {
+        if(!isPreproc()) throw new IllegalArgumentException(Config.NONREC_PARSER_ERROR_PREPROCESSED);
+
+        List<Item> J = new ArrayList<>();
+
+        for(Item item : I) {
+            final Token[] rhs = item.getProduction().getRhs().get(0);
+            final int position = item.getPosition();
+
+            if(position < rhs.length && rhs[position].equals(X)) {
+                J.add(new Item(item.getProduction(), position + 1));
+            }
+        }
+
+        return closure(J);
+    }
+
+    /**
+     * Calculates the canonical collection of LR(0) items for the grammar (it should be extended).
+     * @return The canonical collection of LR(0) items.
+     * @throws IllegalArgumentException If the grammar is not preprocessed or extended (= argument grammar).
+     */
+    public List<List<Item>> elements() {
+        if(!isPreproc()) throw new IllegalArgumentException(Config.NONREC_PARSER_ERROR_PREPROCESSED);
+        if(!isExtended()) throw new IllegalArgumentException(Config.NONREC_PARSER_ERROR_EXTENDED);
+
+        final List<List<Item>> C = new ArrayList<>();
+        final List<Item> I0 = closure(List.of(new Item(productions.get(0), 0)));
+
+        C.add(I0);
+
+        final List<Token> grammarSymbols = new ArrayList<>();
+        grammarSymbols.addAll(vocabulary);
+        grammarSymbols.addAll(alphabet);
+
+        boolean changed = true;
+        while(changed) {
+            final List<List<Item>> C$ = new ArrayList<>();
+
+            for(List<Item> I : C) {
+                for(Token X : grammarSymbols) {
+                    final List<Item> J = goTo(I, X);
+
+                    if(J.size() > 0 && !C.contains(J) && !X.tokenType().name().equals(Config.LEXER_EMPTY_SYMBOL)) {
+                        C$.add(J);
+                    }
+                }
+            }
+
+            if(C$.size() > 0) C.addAll(C$);
+            else changed = false;
+        }
+
+        return C;
+    }
+
+    /**
+     * Adds an argument production to the grammar.
+     * Sets the extended flag to true.
+     * @param token The new lhs token of the argument.
+     */
+    public void addArgumentProduction(final Token lhs) {
+        if(extended) return;
+
+        final List<Token[]> rhs = new ArrayList<>();
+        rhs.add(new Token[] {
+            startsymbol
+        });
+
+        vocabulary.add(lhs);
+        productions.add(0, new Production(lhs, rhs));
+
+        startsymbol = lhs;
+        extended = true;
+    }
+
     
     /**
      * Splits the given productions into a list of productions, where the rhs has only one symbol.
@@ -235,5 +368,55 @@ public class Grammar {
         });
 
         return splittedProductions;
+    }
+
+
+    /**
+     * A Item is a production with a position in the rhs.
+     */
+    public static class Item {
+        private final Production production;
+        private final int position; // The dot position in the rhs: Start at 0 and end at length - 1.
+
+
+        /**
+         * Creates a new item.
+         * @param production The production.
+         * @param position The dot position in the rhs.
+         */
+        public Item(final Production production, final int position) {
+            this.production = production;
+            this.position = position;
+        }
+
+
+        @Override public boolean equals(Object o) {
+            if(this == o) return true;
+            if(o == null || getClass() != o.getClass()) return false;
+
+            final Item item = (Item) o;
+
+            return position == item.position && production.equals(item.production);
+        }
+
+        @Override public String toString() {
+            String rhs = "";
+            for(int i = 0; i < production.getRhs().get(0).length; i++) {
+                if(i == position) rhs += ".";
+                rhs += production.getRhs().get(0)[i].symbol();
+            }
+            if(position == production.getRhs().get(0).length) rhs += ".";
+
+            return production.getLhs().symbol() + " -> " + rhs;
+        }
+
+
+        public Production getProduction() {
+            return production;
+        }
+
+        public int getPosition() {
+            return position;
+        }
     }
 }

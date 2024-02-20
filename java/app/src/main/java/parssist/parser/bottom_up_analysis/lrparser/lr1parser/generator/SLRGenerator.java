@@ -1,51 +1,56 @@
-package parssist.parser.top_down_analysis.nrdparser.generator;
+package parssist.parser.bottom_up_analysis.lrparser.lr1parser.generator;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.PatternSyntaxException;
 
 import parssist.Config;
+import parssist.lexer.Lexer;
+import parssist.lexer.util.Token;
+import parssist.lexer.util.TokenType;
 import parssist.parser.ParserGenerator;
-import parssist.parser.top_down_analysis.nrdparser.generator.exception.GenerationException;
-import parssist.parser.top_down_analysis.nrdparser.parser.TabledrivenPredictiveParser;
-import parssist.parser.top_down_analysis.nrdparser.parser.exception.NoLL1GrammarException;
+import parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser.LRParser;
+import parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser.LRParser.Action;
+import parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser.LRParser.LRParseTable;
+import parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser.SLRParser;
+import parssist.parser.top_down_analysis.nrdparser.generator.exception.ParseException;
 import parssist.parser.util.Grammar;
 import parssist.parser.util.Production;
+import parssist.parser.util.Grammar.Item;
 
 
 /**
- * Class, which generates a table-driven predictive parser code.
+ * Class, which generates a SLR parser.
  */
-public final class TabledrivenPredictiveGenerator extends ParserGenerator {
+public class SLRGenerator extends ParserGenerator {
     private final Grammar grammar;
 
 
     /**
-     * Create a new table-driven predictive parser generator.
+     * Create a new SLR parser.
      * @param grammar Grammar.
      * @throws NullPointerException If the grammar is null.
      */
-    public TabledrivenPredictiveGenerator(final Grammar grammar) throws NullPointerException {
+    public SLRGenerator(final Grammar grammar) throws NullPointerException {
         Objects.requireNonNull(grammar);   
 
         this.grammar = grammar;
     }
 
 
-    @Override public String generate(final String parserName, final String packageName) throws NoLL1GrammarException, IndexOutOfBoundsException, GenerationException {
-        TabledrivenPredictiveParser parser = null;
+    @Override public String generate(String parserName, String packageName) throws Exception {
+        LRParser slrParser = null;
         try {
-            parser = new TabledrivenPredictiveParser(grammar);
-        } catch(StackOverflowError | PatternSyntaxException e) {
-            throw new GenerationException(e.getMessage());
+            slrParser = new SLRParser(grammar);
+        } catch (Exception e) {
+            throw new ParseException(e.getMessage());
         }
 
-        if(parser == null) return "";
+        if(slrParser == null) return "";
 
         String parserCode = loadTemplate();
-        final List<Production>[][] parseTable = parser.getParseTable();
-
-        if(!parser.isLL1(parseTable)) throw new NoLL1GrammarException(Config.NONREC_PARSER_ERROR_NO_LL1_GRAMMAR);
+        final LRParseTable parseTable = slrParser.createParseTable();
 
         parserCode = insertCode(parserCode, generateParseTableCode(parseTable), Config.NONREC_PARSER_TEMPLATE_INIT_PARSETABLE);
         parserCode = insertCode(parserCode, generateTokentypesCode(), Config.NONREC_PARSER_TEMPLATE_INIT_TOKENTYPES);
@@ -53,13 +58,11 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
         parserCode = insertCode(parserCode, generateVocabularyCode(), Config.NONREC_PARSER_TEMPLATE_INIT_VOCABULARY);
         parserCode = insertCode(parserCode, parserName, Config.NONREC_PARSER_TEMPLATE_CLASSNAME);
         parserCode = insertCode(parserCode, packageName.isEmpty() ? packageName : "package " + packageName, Config.NONREC_PARSER_TEMPLATE_PACKAGENAME);
-        parserCode = insertCode(parserCode, "" + parseTable.length, Config.NONREC_PARSER_TEMPLATE_PARSETABLESIZEY);
-        parserCode = insertCode(parserCode, "" + parseTable[0].length, Config.NONREC_PARSER_TEMPLATE_PARSETABLESIZEX);
         parserCode = insertCode(parserCode, grammar.getStartsymbol().tokenType().name(), Config.NONREC_PARSER_TEMPLATE_STARTSYMBOLNAME);
         parserCode = insertCode(parserCode, decorateRegex(grammar.getStartsymbol().tokenType().regex()), Config.NONREC_PARSER_TEMPLATE_STARTSYMBOLREGEX);
         parserCode = insertCode(parserCode, grammar.getStartsymbol().symbol(), Config.NONREC_PARSER_TEMPLATE_STARTSYMBOLVALUE);
-
-        return parserCode.toString();
+    
+        return parserCode;
     }
 
 
@@ -70,68 +73,97 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
      * @param parseTable Parse table.
      * @return Code for the parse table.
      */
-    private String generateParseTableCode(final List<Production>[][] parseTable) {
+    private String generateParseTableCode(final LRParseTable parseTable) {
         final StringBuilder code = new StringBuilder();
 
-        int listnr = 0;
-
-        for(int i = 0; i < parseTable.length; i++) {
-            for(int j = 0; j < parseTable[i].length; j++) {
-                if(parseTable[i][j] != null) {
-                    code.append("parseTable[")
+        final Action[][] actions = parseTable.getActionTable();
+        final int[][] gotos = parseTable.getGotoTable();
+        final List<List<Item>> states = parseTable.getStates();
+        
+        code.append("final Action[][] actionTable = new Action[")
+            .append(actions.length)
+            .append("][")
+            .append(actions[0].length)
+            .append("];\n");
+        
+        for(int i = 0; i < actions.length; i++) {
+            for(int j = 0; j < actions[i].length; j++) {
+                if(actions[i][j] != null) {
+                    code.append("actionTable[")
                         .append(i)
                         .append("][")
                         .append(j)
-                        .append("] = new ArrayList<>();\n");
-
-                    for(Production p : parseTable[i][j]) {
-                        code.append("List<Token[]> list")
-                            .append(listnr)
-                            .append(" = new ArrayList<>();\n")
-                            .append("list")
-                            .append(listnr)
-                            .append(".add(new Token[]{");
-
-                        for(int k = 0; k < p.getRhs().get(0).length; k++) {
-                            code.append("new Token(new TokenType(\"")
-                                .append(p.getRhs().get(0)[k].tokenType().name())
-                                .append("\", \"")
-                                .append(decorateRegex(p.getRhs().get(0)[k].tokenType().regex()))
-                                .append("\", ")
-                                .append(p.getRhs().get(0)[k].tokenType().priority())
-                                .append(", ")
-                                .append(p.getRhs().get(0)[k].tokenType().ignore())
-                                .append("), \"")
-                                .append(p.getRhs().get(0)[k].symbol())
-                                .append("\")");
-                                
-                            if(k < p.getRhs().get(0).length - 1) code.append(", ");
-                        }
-
-                        code.append("});\n");
-
-                        code.append("parseTable[")
-                            .append(i)
-                            .append("][")
-                            .append(j)
-                            .append("].add(new Production(new Token(new TokenType(\"")
-                            .append(p.getLhs().tokenType().name())
-                            .append("\", \"")
-                            .append(decorateRegex(p.getLhs().tokenType().regex()))
-                            .append("\", ")
-                            .append(p.getLhs().tokenType().priority())
-                            .append(", ")
-                            .append(p.getLhs().tokenType().ignore())
-                            .append("), \"")
-                            .append(p.getLhs().symbol())
-                            .append("\"), list")
-                            .append(listnr++);
-                        code.append("));\n");
-                    }
+                        .append("] = new Action(Action.Type.")
+                        .append(actions[i][j].type.name())
+                        .append(", ")
+                        .append(actions[i][j].value)
+                        .append(");\n");
                 }
             }
         }
 
+        code.append("final int[][] gotoTable = new int[")
+            .append(gotos.length)
+            .append("][")
+            .append(gotos[0].length)
+            .append("];\n");
+        
+        for(int i = 0; i < gotos.length; i++) {
+            for(int j = 0; j < gotos[i].length; j++) {
+                code.append("gotoTable[")
+                    .append(i)
+                    .append("][")
+                    .append(j)
+                    .append("] = ")
+                    .append(gotos[i][j])
+                    .append(";\n");
+            }
+        }
+
+        code.append("final List<List<Item>> states = new ArrayList<>();\n");
+
+        for(int i = 0; i < states.size(); i++) {
+            code.append("states.add(new ArrayList<>());\n");
+            for(int j = 0; j < states.get(i).size(); j++) {
+                code.append("states.get(")
+                    .append(i)
+                    .append(").add(new Item(new Production(new Token(new TokenType(\"")
+                    .append(states.get(i).get(j).getProduction().getLhs().tokenType().name())
+                    .append("\", \"")
+                    .append(decorateRegex(states.get(i).get(j).getProduction().getLhs().tokenType().regex()))
+                    .append("\", ")
+                    .append(states.get(i).get(j).getProduction().getLhs().tokenType().priority())
+                    .append(", ")
+                    .append(states.get(i).get(j).getProduction().getLhs().tokenType().ignore())
+                    .append("), \"")
+                    .append(states.get(i).get(j).getProduction().getLhs().symbol())
+                    .append("\"), new Token[][] {");
+
+                for(int k = 0; k < states.get(i).get(j).getProduction().getRhs().size(); k++) {
+                    code.append("{");
+                    for(int l = 0; l < states.get(i).get(j).getProduction().getRhs().get(k).length; l++) {
+                        code.append("new Token(new TokenType(\"")
+                            .append(states.get(i).get(j).getProduction().getRhs().get(k)[l].tokenType().name())
+                            .append("\", \"")
+                            .append(decorateRegex(states.get(i).get(j).getProduction().getRhs().get(k)[l].tokenType().regex()))
+                            .append("\", ")
+                            .append(states.get(i).get(j).getProduction().getRhs().get(k)[l].tokenType().priority())
+                            .append(", ")
+                            .append(states.get(i).get(j).getProduction().getRhs().get(k)[l].tokenType().ignore())
+                            .append("), \"")
+                            .append(states.get(i).get(j).getProduction().getRhs().get(k)[l].symbol())
+                            .append("\"), ");
+                    }
+                    code.append("}, ");
+                }
+
+                code.append("}), ")
+                    .append(states.get(i).get(j).getPosition())
+                    .append("));\n");
+            }
+        }
+
+        code.append("parseTable = new LRParseTable(actionTable, gotoTable, states, alphabet, vocabulary);\n");
         return code.toString();
     }
 
@@ -206,12 +238,12 @@ public final class TabledrivenPredictiveGenerator extends ParserGenerator {
     }
 
     /**
-     * Loads the template txt file of a nrd parser.
+     * Loads the template txt file of a slr parser.
      * Because of webassembly, the template is hardcoded in the config.
      * @return The template.
      */
     private String loadTemplate() {
-        return Config.TEMPLATE;
+        return Config.SLR_TEMPLATE;
     }
 
     /**

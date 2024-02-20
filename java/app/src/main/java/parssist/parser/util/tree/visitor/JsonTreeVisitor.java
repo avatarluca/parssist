@@ -1,9 +1,9 @@
-package parssist.parser.top_down_analysis.nrdparser.parser.util.tree.visitor;
+package parssist.parser.util.tree.visitor;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import parssist.parser.top_down_analysis.nrdparser.parser.util.tree.ParseTreeNode;
+import parssist.parser.util.tree.ParseTreeNode;
 
 
 /**

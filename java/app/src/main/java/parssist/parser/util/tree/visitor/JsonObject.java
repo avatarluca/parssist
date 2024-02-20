@@ -1,4 +1,4 @@
-package parssist.parser.top_down_analysis.nrdparser.parser.util.tree.visitor;
+package parssist.parser.util.tree.visitor;
 
 import java.util.List;
 import java.util.Map;
