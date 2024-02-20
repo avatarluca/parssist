@@ -1,0 +1,741 @@
+{{package_name}};
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+
+/**
+ * A slr parser.
+ */
+@SuppressWarnings("unchecked")
+public final class {{parser_name}} {
+    private final LRParseTable parseTable;
+    private final Stack<Node> stack = new Stack<>();
+    private final List<TokenType> tokentypes = new ArrayList<>();
+    private final List<Token> alphabet = new ArrayList<>();
+    private final List<Token> vocabulary = new ArrayList<>();
+
+
+    /**
+     * Creates a new parser.
+     */
+    public {{parser_name}}() {
+        initTokentypes();
+        initAlphabet();
+        initVocabulary();
+        initParsetable();
+    }
+
+
+    /**
+     * Parses an input word and returns the root node.
+     * @param w Input word.
+     * @return The root node of the generated parsetree.
+     * @throws ParseException If there is any error with parsing the given input word.
+     */
+    public Node parse(final String w) throws ParseException {
+        final String w$ = w + Grammar.EMPTY_SYMBOL;
+        stack = new Stack<>();
+
+        int it = 0;
+        int ip = 0;
+        int state = parseTable.getStartStates().get(0);
+        stack.push(new Node(state));
+
+        while(it < 1000) {
+
+            final Node top = stack.peek();
+            if(top.hasState()) state = top.getState();
+
+            final Token a = getNextToken(ip);
+
+            if(a == null) throw new ParseException("Invalid Token: " + ip + " " + w$);
+            
+            if(a.tokenType().ignore() && ip < w$.length() - 1) { // ignore token (e.g. whitespace, empty symbol except the last one ...) 
+                ip += a.symbol().length();
+                continue;
+            }
+
+            final int aIndex = parseTable.getAlphabet().indexOf(a);
+            final Action action = parseTable.getActionTable()[state][aIndex];
+
+            if(action.type == Action.Type.SHIFT) {
+                stack.push(new Node(a));
+                stack.push(new Node(action.value));
+
+                ip += a.symbol().length();
+            } else if(action.type == Action.Type.REDUCE) {
+                final Node newNode = new Node(grammar.getProductions().get(action.value).getLhs());
+
+                for(int i = 0; i < grammar.getProductions().get(action.value).getRhs().get(0).length * 2; i++) {
+                    final Node node = stack.pop();
+                    if(node.getToken() != null) updateTree(newNode, node);
+                }
+                
+                int $state = state;
+                if(stack.peek().hasState()) $state = stack.peek().getState();
+
+                stack.push(newNode);
+                stack.push(new Node(parseTable.getGotoTable()[$state][parseTable.getVocabulary().indexOf(grammar.getProductions().get(action.value).getLhs())]));
+            } else if(action.type == Action.Type.ACCEPT) {
+                if(stack.peek().getToken() == null) stack.pop();
+
+                return stack.pop();
+            }
+            else if(action.type == Action.Type.ERROR) throw new ParseException();
+
+            it++;
+        }
+
+        throw new ParseException();
+
+        return root;
+    }   
+
+
+    /**
+     * Eats the next token from the input buffer.
+     * @return The next token from the input buffer or null.
+     */
+    private Token getNextToken(final int ip, final String w$) {
+        final String tempW$ = w$.substring(ip);
+
+        for(final TokenType tokenType : tokentypes) { 
+            if(tokenType.name().equals("NONTERMINAL")) continue; // TODO: Add more nonterminal labels
+            final Pattern pattern = Pattern.compile("^" + "(" +  tokenType.regex() + ")");
+            final Matcher matcher = pattern.matcher(tempW$);
+
+            if(matcher.find()) {
+                final String value = matcher.group();
+                return new Token(tokenType, value);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Update the tree.
+     * @param root The root of the partition.
+     * @param node The token to add.
+     */
+    private void updateTree(final Node root, final Node node) {
+        root.addChild(node);
+        node.setParent(root);
+    }
+
+
+
+
+
+
+    /**
+     * ================================
+     * INITS
+     * ================================
+     */
+
+
+    /**
+     * Inits the {@link {{parser_name}}#parseTable}.
+     */
+    private void initParsetable() {
+        {{init_parsetable}}
+    }
+
+    /**
+     * Inits the {@link {{parser_name}}#tokentypes}.
+     */
+    private void initTokentypes() {
+        {{init_tokentypes}}
+    }
+
+    /**
+     * Inits the {@link {{parser_name}}#alphabet}.
+     */
+    private void initAlphabet() {
+        {{init_alphabet}}
+    }
+
+    /**
+     * Inits the {@link {{parser_name}}#vocabulary}.
+     */
+    private void initVocabulary() {
+        {{init_vocabulary}}
+    }
+
+
+
+
+
+
+    /**
+     * ================================
+     * UTILS
+     * ================================
+     */
+
+
+    /**
+     * Defines a token for the lexical analysis.
+     */
+    private final record Token(TokenType tokenType, String symbol) {
+        @Override public boolean equals(Object obj) {
+            if (obj instanceof Token) {
+                Token other = (Token)obj;
+                return this.tokenType.equals(other.tokenType) && this.symbol.equals(other.symbol);
+            }
+
+            return false;
+        }
+    }
+
+
+    /**
+     * Defines a tokentype for the lexical analysis.
+     */
+    private final record TokenType(String name, String regex, int priority, boolean ignore) {
+        @Override public boolean equals(Object obj) {
+            if (obj instanceof TokenType) {
+                TokenType other = (TokenType)obj;
+                return this.name.equals(other.name);
+            }
+
+            return false;
+        }
+    }
+
+
+    /**
+     * A single action in the parse table.
+     */
+    private static class Action {
+        public static enum Type {
+            SHIFT, 
+            REDUCE, 
+            ACCEPT,
+            ERROR
+        }
+
+
+        public final Type type;
+        public final int value;
+
+
+        /**
+         * Create a new action.
+         * @param type The type of the action.
+         * @param value The value of the action.
+         */
+        public Action(Type type, int value) {
+            this.type = type;
+            this.value = value;
+        }
+
+
+        @Override public String toString() {
+            return type + " " + value;
+        }
+    }
+
+    /**
+     * A Item is a production with a position in the rhs.
+     */
+    private static class Item {
+        private final Production production;
+        private final int position; // The dot position in the rhs: Start at 0 and end at length - 1.
+
+
+        /**
+         * Creates a new item.
+         * @param production The production.
+         * @param position The dot position in the rhs.
+         */
+        public Item(final Production production, final int position) {
+            this.production = production;
+            this.position = position;
+        }
+
+
+        @Override public boolean equals(Object o) {
+            if(this == o) return true;
+            if(o == null || getClass() != o.getClass()) return false;
+
+            final Item item = (Item) o;
+
+            return position == item.position && production.equals(item.production);
+        }
+
+        @Override public String toString() {
+            String rhs = "";
+            for(int i = 0; i < production.getRhs().get(0).length; i++) {
+                if(i == position) rhs += ".";
+                rhs += production.getRhs().get(0)[i].symbol();
+            }
+            if(position == production.getRhs().get(0).length) rhs += ".";
+
+            return production.getLhs().symbol() + " -> " + rhs;
+        }
+
+
+        public Production getProduction() {
+            return production;
+        }
+
+        public int getPosition() {
+            return position;
+        }
+    }
+
+    /**
+     * A parse table for the LR parser.
+     * Represents mainly the action and goto table.
+     */
+    private static class LRParseTable {
+        public final Action[][] actionTable;
+        public final int[][] gotoTable;
+        public final List<List<Item>> states;
+        public final List<Token> alphabet;
+        public final List<Token> vocabulary;
+        public final List<Integer> startStates;
+
+
+        /**
+         * Create a new parse table.
+         * @param actionTable The action table.
+         * @param gotoTable The goto table.
+         * @param states The states of the parser.
+         * @param alphabet The alphabet of the grammar.
+         * @param vocabulary The vocabulary of the grammar.
+         */
+        public LRParseTable(final Action[][] actionTable, final int[][] gotoTable, final List<List<Item>> states, final List<Token> alphabet, final List<Token> vocabulary) {
+            this.actionTable = actionTable;
+            this.gotoTable = gotoTable;
+            this.states = states;
+            this.alphabet = alphabet;
+            this.vocabulary = vocabulary;
+            this.startStates = new ArrayList<>();
+
+            for(List<Item> state : states) {
+                for(Item item : state) {
+                    if(item.getProduction().getLhs().symbol().equals("S_") 
+                    && item.getPosition() == 0
+                    && isSymbolNonTerminal(item.getProduction().getRhs().get(0)[0].symbol())) {
+                        startStates.add(states.indexOf(state));
+                        break;
+                    }
+                }
+            }
+        }   
+
+
+        @Override public String toString() {
+            StringBuilder sb = new StringBuilder();
+
+            sb.append("Action Table:\n");
+            for(int i = 0; i < actionTable.length; i++) {
+                sb.append("State " + i + ":\n");
+                for(int j = 0; j < actionTable[i].length; j++) {
+                    sb.append("  " + alphabet.get(j).symbol() + ": " + actionTable[i][j] + "\n");
+                }
+            }
+
+            sb.append("Goto Table:\n");
+            for(int i = 0; i < gotoTable.length; i++) {
+                sb.append("State " + i + ":\n");
+                for(int j = 0; j < gotoTable[i].length; j++) {
+                    sb.append("  " + vocabulary.get(j).symbol() + ": " + gotoTable[i][j] + "\n");
+                }
+            }
+
+            return sb.toString();
+        }
+
+
+        public Action[][] getActionTable() {
+            return actionTable;
+        }
+
+        public int[][] getGotoTable() {
+            return gotoTable;
+        }
+
+        public List<List<Item>> getStates() {
+            return states;
+        }
+
+        public List<Token> getAlphabet() {
+            return alphabet;
+        }
+
+        public List<Token> getVocabulary() {
+            return vocabulary;
+        }
+
+        public List<Integer> getStartStates() {
+            return startStates;
+        }
+
+
+        /**
+         * Prepare the short version of the parse table.
+         * @return The short version of the parse table.
+         */
+        public String print() {
+            String res = "";
+            for(int i = 0; i < actionTable.length; i++) {
+                for(int j = 0; j < actionTable[i].length; j++) {
+                    res += actionTable[i][j] + ":";
+                }
+                res += ";";
+            }
+            for(int i = 0; i < gotoTable.length; i++) {
+                for(int j = 0; j < gotoTable[i].length; j++) {
+                    res += gotoTable[i][j] + ":";
+                }
+                res += ";";
+            }
+
+            return res;
+        }
+
+
+        /**
+        * Checks if the given symbol is a terminal.
+        * @param symbol The symbol which is checked.
+        * @return True if the symbol is a terminal, false otherwise.
+        */
+        private boolean isSymbolTerminal(final String symbol) {
+            return alphabet.stream()
+                            .map(e -> e.symbol())
+                            .anyMatch(e -> e.equals(symbol))
+                || alphabet.stream()
+                            .map(e -> e.tokenType().regex())
+                            .anyMatch(e -> symbol.matches("^" + e + "$"));
+        }
+    }
+
+
+    /**
+     * Defines a new node for the parsetree.
+     */
+    private final class Node {
+        private final Token token;
+        private final List<Node> children;
+        private final int state;
+
+        private Node parent;
+
+
+        /**
+        * Creates a new node.
+        * @param token Token of the node.
+        * @param parent Parent of the node.
+        * @param children Children of the node.
+        * @param state State of the node.
+        */
+        public Node(final Token token, final Node parent, final List<Node> children, final int state) {
+            this.token = token;
+            this.parent = parent;
+            this.children = children;
+            this.state = state;
+        }
+
+        /**
+        * Creates a new node.
+        * @param token Token of the node.
+        * @param parent Parent of the node.
+        * @param children Children of the node.
+        */
+        public Node(final Token token, final Node parent, final List<Node> children) {
+            this(token, parent, children, -1);
+        }
+
+        /**
+        * Creates a new root node.
+        * @param token Token of the node.
+        */
+        public Node(final Token token) {
+            this(token, null, new ArrayList<>());
+        }
+
+        /**
+        * Creates a new state node
+        * @param state State of the node.
+        */
+        public Node(final int state) {
+            this(null, null, new ArrayList<>(), state);
+        }
+
+
+        public Token getToken() {
+            return token;
+        }
+
+        public int getState() {
+            return state;
+        }
+
+        public boolean hasState() {
+            return state != -1;
+        }
+
+        public Node getParent() {
+            return parent;
+        }
+
+        public List<Node> getChildren() {
+            return children;
+        }
+
+        public void setParent(final Node parent) {
+            this.parent = parent;
+        }
+
+        
+        /**
+        * Clean the children of the node.
+        */
+        public void cleanChildren() {
+            children.clear();
+        }
+
+        /**
+        * Add a child to the node if its not already a child.
+        * @param child Child to add.
+        */
+        public void addChild(final Node child) {
+            if(!children.contains(child)) children.add(child);
+        }
+
+        /**
+        * Remove a child from the node.
+        * @param child Child to remove.
+        */
+        public void removeChild(final Node child) {
+            children.remove(child);
+        }
+
+        /**
+        * Check if the node is a leaf.
+        * @return True if the node is a leaf, false otherwise.
+        */
+        public boolean isLeaf() {
+            return children.isEmpty();
+        }
+
+
+        /**
+        * Accept a visitor.
+        * @param vis The visitor to accept.
+        */
+        public void accept(final Visitor vis) {
+            vis.visit(this);
+        }
+
+
+        @Override public boolean equals(final Object obj) {
+            if(obj instanceof Node) {
+                final Node other = (Node) obj;
+                return this.token.equals(other.token);
+            }
+
+            return false;
+        }
+
+        @Override public String toString() {
+            return token.toString();
+        }
+    }
+
+
+    /**
+     * Defines the production structure.
+     */
+    private final class Production {
+        private final Token lhs;
+        private final List<Token[]> rhs;
+
+    
+        /**
+         * Creates a new production.
+         */
+        public Production(final Token lhs, final List<Token[]> rhs) {
+            this.lhs = lhs;
+            this.rhs = rhs;
+        }
+
+
+        @Override public String toString() {
+            final StringBuilder sb = new StringBuilder();
+
+            sb.append(lhs.symbol()).append(" -> ");
+
+            for(int i = 0; i < rhs.size(); i++) {
+                for(int j = 0; j < rhs.get(i).length; j++) {
+                    sb.append(rhs.get(i)[j].symbol());
+                }
+                sb.append(" ");
+                if(i < rhs.size() - 1) sb.append("| ");
+            }
+
+            return sb.toString();
+        }
+
+
+        public Token getLhs() {
+            return lhs;
+        }
+
+        public List<Token[]> getRhs() {
+            return rhs;
+        }
+    }
+
+
+    /**
+     * Defines a stack.
+     * @param <T> Context (contenttype) of the stack.
+     */
+    public class Stack<T> {
+        private List<T> stack;
+
+
+        /**
+        * Creates a new stack.
+        */
+        public Stack() {
+            clean();
+        }
+
+
+        /**
+        * Push a token to the stack.
+        * @param token The token to push.
+        */
+        public void push(final T token) {
+            stack.add(token);
+        }
+
+        /**
+        * Pop a token from the stack.
+        * @return The popped token.
+        */
+        public T pop() {
+            return stack.remove(stack.size() - 1);
+        }
+
+        /**
+        * Peek the top token from the stack.
+        * @return The peeked token.
+        */
+        public T peek() {
+            return stack.get(stack.size() - 1);
+        }
+
+        /**
+        * Check if the stack is empty.
+        * @return True if the stack is empty, false otherwise.
+        */
+        public boolean isEmpty() {
+            return stack.isEmpty();
+        }
+
+        /**
+        * Get the size of the stack.
+        * @return The size of the stack.
+        */
+        public int size() {
+            return stack.size();
+        }
+
+        /**
+        * Cleans the stack.
+        */
+        public void clean() {
+            stack = new ArrayList<>();
+        } 
+
+
+        @Override public String toString() {
+            return stack.stream()
+                        .map(Object::toString)
+                        .reduce((a, b) -> a + "\n+ " + b)
+                        .orElse("");
+        }
+    }
+
+
+    /**
+     * Exception for parsing errors.
+     */
+    public class ParseException extends Exception {
+        public ParseException(final String message) {
+            super(message);
+        }
+        public ParseException() {
+            super();
+        }
+    }
+
+
+    /**
+     * Visitor interface.
+     */
+    public interface Visitor {
+        /**
+        * Visit the object.
+        * @param obj Object to visit.
+        */
+        public void visit(final Node obj);
+    }
+
+
+
+
+
+
+    /**
+     * ================================
+     * CUSTOMIZABLE
+     * ================================
+     */
+
+
+    /**
+     * Example visitor for {@link Node}.
+     * It formats the parsetree to a json.
+     */
+    /*
+    private final class JsonTreeVisitor implements Visitor {
+        private final JSONObject json;
+
+
+        public JsonTreeVisitor() {
+            this.json = new JSONObject();
+        }
+
+
+        public JSONObject getJson() {
+            return json;
+        }
+
+
+        @Override public void visit(final Node node) {
+            final JSONArray kids = new JSONArray();
+
+            if (Node.getChildren().size() > 0) {
+                for (Node child : node.getChildren()) {
+                    final JsonTreeVisitor visitor = new JsonTreeVisitor();
+                    child.accept(visitor);
+                    kids.put(visitor.getJson());
+                }
+            } 
+
+            this.json.put(node.getToken().symbol(), kids);
+        }
+    }
+    */
+}

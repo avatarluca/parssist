@@ -2,14 +2,22 @@ package parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.annotation.Nullable;
 
 import parssist.Config;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
 import parssist.parser.Parser;
+import parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser.exception.LRParseException;
 import parssist.parser.util.Grammar;
 import parssist.parser.util.Grammar.Item;
+import parssist.parser.util.Stack;
 import parssist.parser.util.tree.ParseTreeNode;
+import parssist.parser.util.tree.visitor.JsonLikeTreeVisitor;
 
 
 /**
@@ -18,23 +26,84 @@ import parssist.parser.util.tree.ParseTreeNode;
 abstract public class LRParser extends Parser {
     protected final Grammar grammar;
 
+    private String w$;
+    private Stack<ParseTreeNode> stack;
+    private ParseTreeNode root;
+
 
     /**
      * Create a new LR parser.
      * @param grammar The grammar to parse.
+     * @param w The input string.
+     * @throws NullPointerException If the grammar or the input string is null.
      */
-    public LRParser(final Grammar grammar) {
+    public LRParser(final Grammar grammar, final String w) throws NullPointerException {
         this.grammar = grammar;
         grammar.addArgumentProduction(new Token(new TokenType(Config.GRAMMAR_ARGUMENT_SYMBOL, Config.GRAMMAR_ARGUMENT_SYMBOL, 0, false), Config.GRAMMAR_ARGUMENT_SYMBOL));
+        
+        setInputString(w);
+        resetStack();
     }
 
-    
 
+    @Override public ParseTreeNode parse(final String w) throws Exception, LRParseException {
+        final LRParseTable parseTable = createParseTable();
 
-    @Override public ParseTreeNode parse(String w) throws Exception {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'parse'");
-    }
+        setInputString(w);
+        resetStack();
+
+        int it = 0;
+        int ip = 0;
+        int state = parseTable.getStartStates().get(0);
+        stack.push(new ParseTreeNode(state));
+
+        while(it < Config.PARSELIMIT) {
+
+            final ParseTreeNode top = stack.peek();
+            if(top.hasState()) state = top.getState();
+
+            final Token a = getNextToken(ip);
+
+            if(a == null) throw new LRParseException(Config.BOTTOM_UP_PARSER_ERROR_INVALID_TOKEN + " " + ip + " " + w$);
+            
+            if(a.tokenType().ignore() && ip < w$.length() - 1) { // ignore token (e.g. whitespace, empty symbol except the last one ...) 
+                ip += a.symbol().length();
+                continue;
+            }
+
+            final int aIndex = parseTable.getAlphabet().indexOf(a);
+            final Action action = parseTable.getActionTable()[state][aIndex];
+
+            if(action.type == Action.Type.SHIFT) {
+                stack.push(new ParseTreeNode(a));
+                stack.push(new ParseTreeNode(action.value));
+
+                ip += a.symbol().length();
+            } else if(action.type == Action.Type.REDUCE) {
+                final ParseTreeNode newNode = new ParseTreeNode(grammar.getProductions().get(action.value).getLhs());
+
+                for(int i = 0; i < grammar.getProductions().get(action.value).getRhs().get(0).length * 2; i++) {
+                    final ParseTreeNode node = stack.pop();
+                    if(node.getToken() != null) updateTree(newNode, node);
+                }
+                
+                int $state = state;
+                if(stack.peek().hasState()) $state = stack.peek().getState();
+
+                stack.push(newNode);
+                stack.push(new ParseTreeNode(parseTable.getGotoTable()[$state][parseTable.getVocabulary().indexOf(grammar.getProductions().get(action.value).getLhs())]));
+            } else if(action.type == Action.Type.ACCEPT) {
+                if(stack.peek().getToken() == null) stack.pop();
+                root = stack.peek();
+                return stack.pop();
+            }
+            else if(action.type == Action.Type.ERROR) throw new LRParseException();
+
+            it++;
+        }
+
+        throw new LRParseException(Config.BOTTOM_UP_PARSER_ERROR_PARSE_LIMIT);
+    } 
     
 
     /**
@@ -44,13 +113,86 @@ abstract public class LRParser extends Parser {
      * @return The parse table.
      * @throw Exception if there was an error creating the parse table.
      */
-    abstract protected LRParseTable createParseTable() throws Exception;
+    abstract public LRParseTable createParseTable() throws Exception;
+
+
+    public ParseTreeNode getRoot() {
+        return root;
+    }
+
+    
+    /**
+     * Set the input string.
+     * @param w The input string.
+     * @throws NullPointerException If the input string is null.
+     */
+    public void setInputString(final String w) throws NullPointerException {
+        Objects.requireNonNull(w);
+
+        this.w$ = w + Grammar.EMPTY_SYMBOL;
+    }
+
+    /**
+     * Reset the stack.
+     */
+    public void resetStack() {
+        this.stack = new Stack<>();
+    }
+
+    /**
+     * Print the tree as JSON.
+     * Because of webassembly, the tree can't be org.json.
+     * So it uses a custom implementation of a JSON like object.
+     * @throws NullPointerException If the root or its token are null.
+     */
+    public void printParseTree() throws NullPointerException {
+        Objects.requireNonNull(root);
+        Objects.requireNonNull(root.getToken());
+
+        final JsonLikeTreeVisitor visitor = new JsonLikeTreeVisitor();
+        root.accept(visitor);
+        
+        System.out.println(visitor.getJson());
+    }
+    
+
+    /**
+     * Get the next token from the input buffer.
+     * Maybe sort by priority of the token types in the future.
+     * @return The next token from the input buffer or null.
+     */
+    private @Nullable Token getNextToken(final int ip) {
+        final String tempW$ = w$.substring(ip);
+
+        for(final TokenType tokenType : grammar.getTokentypes()) { 
+            if(tokenType.name().equals(Config.LEXER_NONTERMINAL)) continue;
+            final Pattern pattern = Pattern.compile(Config.LEXER_REGEX_STARTSYMBOL + "(" +  tokenType.regex() + ")");
+            final Matcher matcher = pattern.matcher(tempW$);
+
+            if(matcher.find()) {
+                final String value = matcher.group();
+                return new Token(tokenType, value);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Update the tree.
+     * @param root The root of the partition.
+     * @param node The token to add.
+     */
+    private void updateTree(final ParseTreeNode root, final ParseTreeNode node) {
+        root.addChild(node);
+        node.setParent(root);
+    }
 
 
     /**
      * A single action in the parse table.
      */
-    protected static class Action {
+    public static class Action {
         public static enum Type {
             SHIFT, 
             REDUCE, 
@@ -83,7 +225,7 @@ abstract public class LRParser extends Parser {
      * A parse table for the LR parser.
      * Represents mainly the action and goto table.
      */
-    protected static class LRParseTable {
+    public static class LRParseTable {
         public final Grammar grammar;
         public final Action[][] actionTable;
         public final int[][] gotoTable;

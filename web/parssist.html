@@ -75,6 +75,14 @@
                                 <span class="tooltiptext">The generated parser can determine languages that can be defined with an LL(1) grammar. It is a deterministic pushdown automaton which uses a parse table and is therefore (optimized) non-recursive. It therefore applies a top-down syntax analysis.</span>
                             </div>
                         </div>
+                        <div>
+                            <input type="radio" id="algorithm-slr1" name="parse-algorithm" value="slr1">
+                            <label for="algorithm-slr1">SLR(1)</label>
+                            <div class="tooltip">
+                                <img class="question-mark" id="help-algorithm-auto" src="img/question_icon.png">
+                                <span class="tooltiptext">Using a bottom-up analysis strategy (the simplest algorithm in the LR family).</span>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>

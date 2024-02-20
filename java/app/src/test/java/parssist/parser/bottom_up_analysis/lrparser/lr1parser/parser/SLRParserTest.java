@@ -1,5 +1,6 @@
 package parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -13,9 +14,11 @@ import parssist.Config;
 import parssist.lexer.util.Token;
 import parssist.lexer.util.TokenType;
 import parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser.LRParser.LRParseTable;
+import parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser.exception.LRParseException;
 import parssist.parser.bottom_up_analysis.lrparser.lr1parser.parser.exception.NoSLR1GrammarException;
 import parssist.parser.util.Grammar;
 import parssist.parser.util.Production;
+import parssist.parser.util.tree.visitor.JsonLikeTreeVisitor;
 
 
 /**
@@ -50,17 +53,17 @@ public class SLRParserTest {
 
 
         list2.add(new Token[] {
-            new Token(new TokenType("NONTERMINAL", "", 0, false), "E"),
-            new Token(new TokenType("TERMINAL", "", 0, false), "+"), 
-            new Token(new TokenType("NONTERMINAL", "", 0, false), "T")
+            new Token(new TokenType("NONTERMINAL", "E", 0, false), "E"),
+            new Token(new TokenType("TERMINAL", "\\+", 0, false), "+"), 
+            new Token(new TokenType("NONTERMINAL", "T", 0, false), "T")
         });
         list2.add(new Token[] {
-            new Token(new TokenType("NONTERMINAL", "", 0, false), "T")
+            new Token(new TokenType("NONTERMINAL", "T", 0, false), "T")
         });
         productions.add(
             new Production(
                 new Token(
-                    new TokenType("NONTERMINAL", "", 0, false), "E"
+                    new TokenType("NONTERMINAL", "E", 0, false), "E"
                 ), 
                 list2
             )
@@ -68,17 +71,17 @@ public class SLRParserTest {
 
 
         list3.add(new Token[] {
-            new Token(new TokenType("NONTERMINAL", "", 0, false), "T"),
-            new Token(new TokenType("TERMINAL", "", 0, false), "*"), 
-            new Token(new TokenType("NONTERMINAL", "", 0, false), "F")
+            new Token(new TokenType("NONTERMINAL", "T", 0, false), "T"),
+            new Token(new TokenType("TERMINAL", "\\*", 0, false), "*"), 
+            new Token(new TokenType("NONTERMINAL", "F", 0, false), "F")
         });
         list3.add(new Token[] {
-            new Token(new TokenType("NONTERMINAL", "", 0, false), "F")
+            new Token(new TokenType("NONTERMINAL", "F", 0, false), "F")
         });
         productions.add(
             new Production(
                 new Token(
-                    new TokenType("NONTERMINAL", "", 0, false), "T"
+                    new TokenType("NONTERMINAL", "T", 0, false), "T"
                 ), 
                 list3
             )
@@ -86,17 +89,17 @@ public class SLRParserTest {
 
 
         list4.add(new Token[] {
-            new Token(new TokenType("TERMINAL", "", 0, false), "("), 
-            new Token(new TokenType("NONTERMINAL", "", 0, false), "E"),
-            new Token(new TokenType("TERMINAL", "", 0, false), ")")
+            new Token(new TokenType("TERMINAL", "\\(", 0, false), "("), 
+            new Token(new TokenType("NONTERMINAL", "E", 0, false), "E"),
+            new Token(new TokenType("TERMINAL", "\\)", 0, false), ")")
         });
         list4.add(new Token[] {
-            new Token(new TokenType("TERMINAL", "", 0, false), "id")
+            new Token(new TokenType("TERMINAL", "id", 0, false), "id")
         });
         productions.add(
             new Production(
                 new Token(
-                    new TokenType("NONTERMINAL", "", 0, false), "F"
+                    new TokenType("NONTERMINAL", "F", 0, false), "F"
                 ), 
                 list4
             )
@@ -104,40 +107,43 @@ public class SLRParserTest {
 
 
         vocabulary.add(new Token(
-            new TokenType("NONTERMINAL", "", 0, false), "E"
+            new TokenType("NONTERMINAL", "E", 0, false), "E"
         ));
         vocabulary.add(new Token(
-            new TokenType("NONTERMINAL", "", 0, false), "T"
+            new TokenType("NONTERMINAL", "T", 0, false), "T"
         ));
         vocabulary.add(new Token(
-            new TokenType("NONTERMINAL", "", 0, false), "F"
+            new TokenType("NONTERMINAL", "F", 0, false), "F"
         ));
         
         alphabet.add(new Token(
-            new TokenType("TERMINAL", "", 0, false), "("
+            new TokenType("TERMINAL", "\\(", 0, false), "("
         ));
         alphabet.add(new Token(
-            new TokenType("TERMINAL", "", 0, false), ")"
+            new TokenType("TERMINAL", "\\)", 0, false), ")"
         ));
         alphabet.add(new Token(
-            new TokenType("TERMINAL", "", 0, false), "*"
+            new TokenType("TERMINAL", "\\*", 0, false), "*"
         ));
         alphabet.add(new Token(
-            new TokenType("TERMINAL", "", 0, false), "+"
+            new TokenType("TERMINAL", "\\+", 0, false), "+"
         ));
         alphabet.add(new Token(
-            new TokenType("TERMINAL", "", 0, false), "id"
+            new TokenType("TERMINAL", "id", 0, false), "id"
         ));
         alphabet.add(new Token(
-            new TokenType("EMPTY_SYMBOL", "", 0, false), "$"
+            new TokenType("EMPTY_SYMBOL", "\\$", 0, true), "$"
         ));
 
         startsymbol = new Token(
-            new TokenType("NONTERMINAL", "", 0, false), "E"
+            new TokenType("NONTERMINAL", "E", 0, false), "E"
         );
         
+        List<TokenType> tokentypes = new ArrayList<>();
+        tokentypes.addAll(alphabet.stream().map(e -> e.tokenType()).toList());
+        tokentypes.addAll(vocabulary.stream().map(e -> e.tokenType()).toList());
 
-        grammar = new Grammar(new ArrayList<>(), vocabulary, alphabet, productions, startsymbol, true);
+        grammar = new Grammar(tokentypes, vocabulary, alphabet, productions, startsymbol, true);
         grammar.addArgumentProduction(new Token(new TokenType("NONTERMINAL", Config.GRAMMAR_ARGUMENT_SYMBOL, 0, false), Config.GRAMMAR_ARGUMENT_SYMBOL));
     }
 
@@ -158,17 +164,17 @@ public class SLRParserTest {
 
 
         list2.add(new Token[] {
-            new Token(new TokenType("NONTERMINAL", "", 0, false), "L"),
-            new Token(new TokenType("TERMINAL", "", 0, false), "="), 
-            new Token(new TokenType("NONTERMINAL", "", 0, false), "R")
+            new Token(new TokenType("NONTERMINAL", "L", 0, false), "L"),
+            new Token(new TokenType("TERMINAL", "\\=", 0, false), "="), 
+            new Token(new TokenType("NONTERMINAL", "R", 0, false), "R")
         });
         list2.add(new Token[] {
-            new Token(new TokenType("NONTERMINAL", "", 0, false), "R")
+            new Token(new TokenType("NONTERMINAL", "R", 0, false), "R")
         });
         productions.add(
             new Production(
                 new Token(
-                    new TokenType("NONTERMINAL", "", 0, false), "S"
+                    new TokenType("NONTERMINAL", "S", 0, false), "S"
                 ), 
                 list2
             )
@@ -176,16 +182,16 @@ public class SLRParserTest {
 
 
         list3.add(new Token[] {
-            new Token(new TokenType("TERMINAL", "", 0, false), "*"), 
-            new Token(new TokenType("NONTERMINAL", "", 0, false), "R")
+            new Token(new TokenType("TERMINAL", "\\*", 0, false), "*"), 
+            new Token(new TokenType("NONTERMINAL", "R", 0, false), "R")
         });
         list3.add(new Token[] {
-            new Token(new TokenType("TERMINAL", "", 0, false), "id")
+            new Token(new TokenType("TERMINAL", "id", 0, false), "id")
         });
         productions.add(
             new Production(
                 new Token(
-                    new TokenType("NONTERMINAL", "", 0, false), "L"
+                    new TokenType("NONTERMINAL", "L", 0, false), "L"
                 ), 
                 list3
             )
@@ -193,12 +199,12 @@ public class SLRParserTest {
 
 
         list4.add(new Token[] {
-            new Token(new TokenType("NONTERMINAL", "", 0, false), "L")
+            new Token(new TokenType("NONTERMINAL", "L", 0, false), "L")
         });
         productions.add(
             new Production(
                 new Token(
-                    new TokenType("NONTERMINAL", "", 0, false), "R"
+                    new TokenType("NONTERMINAL", "R", 0, false), "R"
                 ), 
                 list4
             )
@@ -206,34 +212,125 @@ public class SLRParserTest {
 
 
         vocabulary.add(new Token(
-            new TokenType("NONTERMINAL", "", 0, false), "S"
+            new TokenType("NONTERMINAL", "S", 0, false), "S"
         ));
         vocabulary.add(new Token(
-            new TokenType("NONTERMINAL", "", 0, false), "L"
+            new TokenType("NONTERMINAL", "L", 0, false), "L"
         ));
         vocabulary.add(new Token(
-            new TokenType("NONTERMINAL", "", 0, false), "R"
+            new TokenType("NONTERMINAL", "R", 0, false), "R"
         ));
         
         alphabet.add(new Token(
-            new TokenType("TERMINAL", "", 0, false), "id"
+            new TokenType("TERMINAL", "id", 0, false), "id"
         ));
         alphabet.add(new Token(
-            new TokenType("TERMINAL", "", 0, false), "="
+            new TokenType("TERMINAL", "\\=", 0, false), "="
         ));
         alphabet.add(new Token(
-            new TokenType("TERMINAL", "", 0, false), "*"
+            new TokenType("TERMINAL", "\\*", 0, false), "*"
         ));
         alphabet.add(new Token(
-            new TokenType("EMPTY_SYMBOL", "", 0, false), "$"
+            new TokenType("EMPTY_SYMBOL", "\\$", 0, false), "$"
         ));
 
         startsymbol = new Token(
-            new TokenType("NONTERMINAL", "", 0, false), "S"
+            new TokenType("NONTERMINAL", "S", 0, false), "S"
         );
         
+        List<TokenType> tokentypes = new ArrayList<>();
+        tokentypes.addAll(alphabet.stream().map(e -> e.tokenType()).toList());
+        tokentypes.addAll(vocabulary.stream().map(e -> e.tokenType()).toList());
 
-        grammar = new Grammar(new ArrayList<>(), vocabulary, alphabet, productions, startsymbol, true);
+        grammar = new Grammar(tokentypes, vocabulary, alphabet, productions, startsymbol, true);
+        grammar.addArgumentProduction(new Token(new TokenType("NONTERMINAL", Config.GRAMMAR_ARGUMENT_SYMBOL, 0, false), Config.GRAMMAR_ARGUMENT_SYMBOL));
+    }
+
+    /**
+     * Set up the grammar, by using the following grammar:
+     * S -> TS | $
+     * T -> (S) | $
+     * (Grammar for the language of balanced parentheses)
+     */
+    private void setUp3() {
+        List<Production> productions = new ArrayList<>();
+        List<Token> vocabulary = new ArrayList<>();
+        List<Token> alphabet = new ArrayList<>();
+        List<Token[]> list1 = new ArrayList<>();
+        List<Token[]> list2 = new ArrayList<>();
+        List<Token[]> list3 = new ArrayList<>();
+
+
+        list1.add(new Token[] {
+            new Token(new TokenType("NONTERMINAL", "T", 0, false), "T"),  
+            new Token(new TokenType("NONTERMINAL", "S", 0, false), "S")
+        });
+        productions.add(
+            new Production(
+                new Token(
+                    new TokenType("NONTERMINAL", "S", 0, false), "S"
+                ), 
+                list1
+            )
+        );
+
+
+        list2.add(new Token[] {
+            new Token(new TokenType("EMPTY_SYMBOL", "\\$", 0, true), "$")
+        });
+        productions.add(
+            new Production(
+                new Token(
+                    new TokenType("NONTERMINAL", "S", 0, false), "S"
+                ), 
+                list2
+            )
+        );
+
+
+        list3.add(new Token[] {
+            new Token(new TokenType("TERMINAL", "(", 0, false), "("),  
+            new Token(new TokenType("NONTERMINAL", "S", 0, false), "S"),
+            new Token(new TokenType("TERMINAL", ")", 0, false), ")"),  
+        });
+        productions.add(
+            new Production(
+                new Token(
+                    new TokenType("NONTERMINAL", "T", 0, false), "T"
+                ), 
+                list3
+            )
+        );
+
+
+        vocabulary.add(new Token(
+            new TokenType("NONTERMINAL", "S", 0, false), "S"
+        ));
+        vocabulary.add(new Token(
+            new TokenType("NONTERMINAL", "T", 0, false), "T"
+        ));
+        
+        alphabet.add(new Token(
+            new TokenType("TERMINAL", "\\(", 0, false), "("
+        ));
+        alphabet.add(new Token(
+            new TokenType("TERMINAL", "\\)", 0, false), ")"
+        ));
+        alphabet.add(new Token(
+            new TokenType("EMPTY_SYMBOL", "\\$", 0, true), "$"
+        ));
+
+        Token startsymbol = new Token(
+            new TokenType("NONTERMINAL", "S", 0, false), "S"
+        );
+        
+        List tokentypes = new ArrayList<>();
+        tokentypes.add(new TokenType("TERMINAL", "\\(|\\)", 0, false));
+        tokentypes.add(new TokenType("NONTERMINAL", "S", 0, false));
+        tokentypes.add(new TokenType("EMPTY_SYMBOL", "\\$", 0, true));
+
+
+        grammar = new Grammar(tokentypes, vocabulary, alphabet, productions, startsymbol, true);
         grammar.addArgumentProduction(new Token(new TokenType("NONTERMINAL", Config.GRAMMAR_ARGUMENT_SYMBOL, 0, false), Config.GRAMMAR_ARGUMENT_SYMBOL));
     }
 
@@ -244,7 +341,7 @@ public class SLRParserTest {
      */
     @Test
     @DisplayName("Test createParseTable()")
-    public void testCreateParseTable() throws Exception {
+    public void testCreateParseTable1() throws Exception {
         setUp1();
 
         final SLRParser parser = new SLRParser(grammar);
@@ -257,16 +354,63 @@ public class SLRParserTest {
 
     /**
      * Test the {@link SLRParser#createParseTable()} with the grammar from {@link #setUp2()}.
+     * @throws Exception If there was an error creating the parse table.
+     */
+    @Test
+    @DisplayName("Test createParseTable()")
+    public void testCreateParseTable2() throws Exception {
+        setUp3();
+
+        final SLRParser parser = new SLRParser(grammar);
+        parser.createParseTable();    }
+
+
+    /**
+     * Test the {@link SLRParser#createParseTable()} with the grammar from {@link #setUp2()}.
      * Many unambiguous grammars are not SLR(1) (this test should be a positive exception test).
      * It should throw a {@link NoSLR1GrammarException}.
      * @throws Exception If there was an error creating the parse table.
      */
     @Test
     @DisplayName("Test createParseTable()")
-    public void testCreateParseTable2() throws Exception {
+    public void testCreateParseTable3() throws Exception {
         setUp2();
 
         final SLRParser parser = new SLRParser(grammar);
         assertThrows(NoSLR1GrammarException.class, () -> parser.createParseTable());
+    }
+
+
+    /**
+     * Test the {@link SLRParser#parse(String)} with the grammar from {@link #setUp1()}.
+     * @throws Exception 
+     * @throws LRParseException 
+     */
+    @Test
+    @DisplayName("Test parse()")
+    public void testParse() throws LRParseException, Exception {
+        setUp1();
+
+        final SLRParser parser = new SLRParser(grammar);
+
+        assertDoesNotThrow(() -> parser.parse("id+id"));
+        assertDoesNotThrow(() -> parser.parse("id+$id"));
+        assertDoesNotThrow(() -> parser.parse("id+id*id"));
+        assertDoesNotThrow(() -> parser.parse("id+id*id+id"));
+        assertDoesNotThrow(() -> parser.parse("id+id*id+id*id"));
+        assertDoesNotThrow(() -> parser.parse("id+id*id+id*id+id"));
+        assertDoesNotThrow(() -> parser.parse("id+id*id"));
+
+        assertThrows(LRParseException.class, () -> parser.parse("id+id*id+id*id+id*"));
+        assertThrows(LRParseException.class, () -> parser.parse("id++id"));
+        assertThrows(LRParseException.class, () -> parser.parse("+id+id"));
+        assertThrows(LRParseException.class, () -> parser.parse("*"));
+        assertThrows(LRParseException.class, () -> parser.parse("$+id+id"));
+
+        final parssist.parser.util.tree.ParseTreeNode root = parser.parse("id+id");
+        final JsonLikeTreeVisitor visitor = new JsonLikeTreeVisitor();
+        root.accept(visitor);
+
+        System.out.println(visitor.getJson());
     }
 }

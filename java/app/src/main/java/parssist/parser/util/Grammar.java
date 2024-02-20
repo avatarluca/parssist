@@ -314,7 +314,7 @@ public class Grammar {
                 for(Token X : grammarSymbols) {
                     final List<Item> J = goTo(I, X);
 
-                    if(J.size() > 0 && !C.contains(J)) {
+                    if(J.size() > 0 && !C.contains(J) && !X.tokenType().name().equals(Config.LEXER_EMPTY_SYMBOL)) {
                         C$.add(J);
                     }
                 }

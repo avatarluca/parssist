@@ -15,9 +15,23 @@ import java.util.ArrayList;
 public class ParseTreeNode {
     private final Token token;
     private final List<ParseTreeNode> children;
+    private final int state;
 
     private ParseTreeNode parent;
 
+
+    /**
+     * Creates a new node.
+     * @param token
+     * @param parent
+     * @param children
+     */
+    public ParseTreeNode(final Token token, final ParseTreeNode parent, final List<ParseTreeNode> children, final int state) {
+        this.token = token;
+        this.parent = parent;
+        this.children = children;
+        this.state = state;
+    }
 
     /**
      * Creates a new node.
@@ -26,9 +40,7 @@ public class ParseTreeNode {
      * @param children Children of the node.
      */
     public ParseTreeNode(final Token token, final ParseTreeNode parent, final List<ParseTreeNode> children) {
-        this.token = token;
-        this.parent = parent;
-        this.children = children;
+        this(token, parent, children, Config.PARSETREE_STATELESS_STATE);
     }
 
     /**
@@ -39,9 +51,26 @@ public class ParseTreeNode {
         this(token, null, new ArrayList<>());
     }
 
+    /**
+     * Creates a new state node.
+     * @param token Token of the node.
+     * @param state State of the node.
+     */
+    public ParseTreeNode(final int state) {
+        this(null, null, new ArrayList<>(), state);
+    }
+
 
     public Token getToken() {
         return token;
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    public boolean hasState() {
+        return state != Config.PARSETREE_STATELESS_STATE;
     }
 
     public ParseTreeNode getParent() {
@@ -111,6 +140,6 @@ public class ParseTreeNode {
     }
 
     @Override public String toString() {
-        return token.toString();
+        return token != null ? token.toString() : "" + state;
     }
 }

@@ -96,7 +96,7 @@ let javaParsetreeGenerator = null;
         }, 
     }).then(teavm => {
         this.instance = teavm.instance;
-        javaParsetreeGenerator = (cmd, lexerCode, grammarCode, input) => teavm.main([cmd, lexerCode, grammarCode, input]).catch(e => handleWasmInputException(e)).finally(() => finalTask());
+        javaParsetreeGenerator = (cmd, lexerCode, grammarCode, input, algorithm) => teavm.main([cmd, lexerCode, grammarCode, input, algorithm]).catch(e => handleWasmInputException(e)).finally(() => finalTask());
         console.log("> Java WASM handleParseTree module loaded successfully!");
     })
 })();
@@ -123,7 +123,7 @@ let javaValidationGenerator = null;
         }, 
     }).then(teavm => {
         this.instance = teavm.instance;
-        javaValidationGenerator = (cmd, lexerCode, input, algorithm) => teavm.main([cmd, lexerCode, input, algorithm]).catch(e => handleWasmInputException(e)).finally(() => finalTask());
+        javaValidationGenerator = (cmd, lexerCode, grammarCode, input, algorithm) => teavm.main([cmd, lexerCode, grammarCode, input, algorithm]).catch(e => handleWasmInputException(e)).finally(() => finalTask());
         console.log("> Java WASM handleValidation module loaded successfully!");
     })
 })();
@@ -135,8 +135,8 @@ function computeJavaParsergenerator(args, parsetree, tokentable, validation, inp
     javaParsergenerator("codegeneration", args);
 
     if(input == null) input = "";
-    
-    if(parsetree) javaParsetreeGenerator("parsetree", args.lexerCode, args.grammarCode, input);
+
+    if(parsetree) javaParsetreeGenerator("parsetree", args.lexerCode, args.grammarCode, input, args.algorithm);
     if(tokentable) javaTokentableGenerator("tokentable", args.lexerCode, input);
     if(validation) javaValidationGenerator("validate", args.lexerCode, args.grammarCode, input, args.algorithm);
 }
@@ -224,6 +224,7 @@ const manageCodeGenerator = (code) => {
 }
 const manageParsetree = (code) => {
     try {
+        console.log(code)
         if(code != "" && code != null) {
             console.log("Parsetree: " + code);
             const json = JSON.parse(code);
@@ -242,6 +243,7 @@ const manageParsetree = (code) => {
     }
 }
 const manageValidation = (code) => {
+    console.log("Validation: " + code);
     if(code != "" && code != null) {
         console.log("Validation: " + code);
         document.getElementById("validation-board").innerHTML = code;

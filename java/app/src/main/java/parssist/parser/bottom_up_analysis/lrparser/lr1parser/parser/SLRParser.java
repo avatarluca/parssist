@@ -17,9 +17,19 @@ import java.util.Set;
 public class SLRParser extends LRParser {
     /**
      * Creates a new SLR parser.
+     * @param grammar The grammar to parse.
+     * @param w The input string.
+     */
+    public SLRParser(final Grammar grammar, final String w) {
+        super(grammar, w);
+    }
+
+    /**
+     * Creates a SLR parse table with an empty input string.
+     * @param grammar The grammar to parse.
      */
     public SLRParser(final Grammar grammar) {
-        super(grammar);
+        super(grammar, "");
     }
 
 
@@ -28,9 +38,8 @@ public class SLRParser extends LRParser {
      * Startstate of the parser is the set of items of the augmented grammar with the item [S' -> .S].
      * @throws NoSLR1GrammarException if the grammar is not SLR(1). Its not possible to create a SLR(1) parse table for the given grammar.
      */
-    @Override protected LRParseTable createParseTable() throws NoSLR1GrammarException {        
+    @Override public LRParseTable createParseTable() throws NoSLR1GrammarException {        
         final List<List<Item>> C = grammar.elements();
-
         final Action[][] actions = new Action[C.size()][grammar.getAlphabet().size()];
         final int[][] gotos = new int[C.size()][grammar.getVocabulary().size()];
 
@@ -44,8 +53,6 @@ public class SLRParser extends LRParser {
                         else token = item.getProduction().getRhs().get(0)[item.getPosition()];
 
                         final int a = grammar.getAlphabet().indexOf(token);
-
-                        
                         if(a >= 0) {
                             if(actions[i][a] != null && actions[i][a].type != Action.Type.ERROR && actions[i][a].type != Action.Type.SHIFT) throw new NoSLR1GrammarException(Config.BOTTOM_UP_PARSER_ERROR_NO_SLR1_GRAMMAR);
 
@@ -73,13 +80,12 @@ public class SLRParser extends LRParser {
 
                 if(isReductionPossible(item, C.get(i))) {
                     final Set<Token> follow = grammar.follow(item.getProduction().getLhs().symbol(), item.getProduction().getLhs().symbol());
-                    
+
                     for(final Token token : follow) {
                         final int a = grammar.getAlphabet().indexOf(token);
 
                         if(a >= 0) {
                             if(actions[i][a] != null && actions[i][a].type != Action.Type.ERROR && actions[i][a].type != Action.Type.REDUCE) throw new NoSLR1GrammarException(Config.BOTTOM_UP_PARSER_ERROR_NO_SLR1_GRAMMAR);
-
                             actions[i][a] = new Action(Action.Type.REDUCE, grammar.getProductions().indexOf(item.getProduction()));
                         }
                     }
