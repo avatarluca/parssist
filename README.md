@@ -38,3 +38,5 @@ Argument       | Description
 # Todo
 - LR-Parser
 - Error Recovery Methods (Settings)
+- Other Languages
+- Handling Spaces and other cases in input
