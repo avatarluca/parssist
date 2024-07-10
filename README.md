@@ -38,5 +38,6 @@ Argument       | Description
 # Todo
 - LR-Parser
 - Error Recovery Methods (Settings)
+- Add semantic predicates
 - Other Languages
 - Handling Spaces and other cases in input
