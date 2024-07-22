@@ -1,7 +1,7 @@
 # Parssist - A parser assistant
 A Parsergenerator, which takes an extended BNF and builds a Parser (with a certain algorithm).
 
-# Get started
+# Getting started
 Basically, Parssist takes a grammar and a lexical definition described in the [wiki](https://github.com/avatarluca/parssist/wiki). After cloning or forking the project, the predefined files `input.lex` and `input.gra` in the input directory as well as own files can be edited and executed as input (as well as a few additional arguments described [here](#command-line-arguments)). These two methods are described in more detail below.
 
 ## Online Editor (recommended)
