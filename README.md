@@ -7,6 +7,9 @@ Basically, Parssist takes a grammar and a lexical definition described in the [w
 ## Online Editor (recommended)
 For using the [online editor](https://www.parsergenerator.valenzelektron.com/web/parssist.html) read the [wiki](https://github.com/avatarluca/parssist/wiki).
 
+## VSCode Extension
+See [Extension](https://marketplace.visualstudio.com/items?itemName=valenzelektron.parssist).
+
 ## Command line
 There are 3 ways to use parssist in command line:
 #### Existing grammar definition
