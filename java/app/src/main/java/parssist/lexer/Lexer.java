@@ -47,7 +47,7 @@ public class Lexer {
 
 
     /**
-     * Tokenize a input string.
+     * Tokenize a input string (give a list of terminals from the input string).
      * @throws InvalidTokenException When an invalid token is found.
      */
     public List<Token> tokenize() throws InvalidTokenException {
