@@ -43,5 +43,5 @@ Argument       | Description
 - Error Recovery Methods (Settings)
 - Add semantic predicates
 - Other Languages
-- Handling Spaces and other cases in input
+- More on handling spaces and other cases in input
 => See Issues
